@@ -5,7 +5,7 @@ header.app-header{display:flex;align-items:center;justify-content:space-between;
 .top-nav a{margin-right:12px;text-decoration:none;color:var(--primary);} 
 header h1{margin:0 0 6px;color:var(--primary);} 
 .desc{color:#555;margin:0 0 12px;} 
-.hidden{display:none;} 
+.hidden{display:none !important;} /* 強制的に消す */
 section{margin-bottom:16px;} 
 #controls .row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;} 
 .filters{background:#fff;padding:12px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);} 
@@ -20,9 +20,13 @@ button{padding:10px 14px;border:none;border-radius:6px;background:var(--primary)
 button.secondary{background:#888;} 
 button.danger{background:#d95757;} 
 button:disabled{opacity:.5;cursor:not-allowed;} 
-#feedback{border-top:1px dashed #ddd;margin-top:12px;padding-top:8px;} 
+#feedback{border-top:1px dashed #ddd;margin-top:12px;padding-top:8px; background-color: #fafafa; padding: 10px; border-radius: 6px;} 
 summary{cursor:pointer;} 
 footer{margin-top:24px;color:#777;text-align:center;} 
+
+/* 正解・不正解の色設定 */
+.judge-correct { color: #28a745; font-weight: bold; font-size: 1.2em; margin: 0; }
+.judge-incorrect { color: #dc3545; font-weight: bold; font-size: 1.2em; margin: 0; }
 
 /* Sticky meta + bottom nav for mobile usability */
 #meta{position:sticky;top:0;z-index:100;background:#fff;} 
@@ -48,6 +52,7 @@ canvas{max-width:100%;height:auto;}
   .filters, #quiz, #results, #meta { background: #1d1d1d; box-shadow: none; border: 1px solid #333; }
   form label { background: #222; border-color: #333; }
   .nav { background: #1d1d1d; border-top-color: #333; }
+  #feedback { background-color: #2a2a2a; border-color: #444; }
   footer { color: #999; }
 }
 

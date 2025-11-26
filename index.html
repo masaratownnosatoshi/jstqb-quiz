@@ -16,11 +16,9 @@
       </nav>
     </header>
 
-    <!-- TOP（ホーム） -->
     <section id="controls" data-route="home">
       <p class="desc">拡張版：出題数選択／絞り込み／グラフ／履歴／弱点優先モード</p>
       <div class="row">
-        <!-- 任意入力。未入力なら匿名IDで履歴管理 -->
         <label>ユーザーID（任意）：<input id="userIdInput" type="text" placeholder="例）guest01 / 任意のニックネーム" /></label>
         <label>出題数：
           <select id="numSelect">
@@ -55,7 +53,7 @@
             <label><input type="checkbox" class="categoryFilter" value="クラウド" checked>クラウド</label>
             <label><input type="checkbox" class="categoryFilter" value="医療" checked>医療</label>
             <label><input type="checkbox" class="categoryFilter" value="一般" checked>一般</label>
-			<label><input type="checkbox" class="categoryFilter" value="金融" checked>金融</label>
+            <label><input type="checkbox" class="categoryFilter" value="金融" checked>金融</label>
           </div>
         </div>
       </details>
@@ -66,31 +64,30 @@
       </div>
     </section>
 
-    <!-- メタ情報（試験中ヘッダ相当） -->
     <section id="meta" class="hidden" data-route="quiz">
       <div>問題：<span id="progress">-</span></div>
       <div>正答：<span id="score">0</span></div>
       <button id="goHomeBtn" type="button" class="danger">TOPへ戻る</button>
     </section>
 
-    <!-- 試験画面 -->
     <section id="quiz" class="hidden" data-route="quiz">
       <div id="chapter"></div>
       <div id="level"></div>
+      
       <h2 id="questionText">問題を読み込み中...</h2>
-      <form id="optionsForm"></form>
+      
+      <form id="choices"></form>
+      
       <div id="feedback" class="hidden">
-        <p><strong>正解：</strong><span id="correctAnswer"></span></p>
+        <h3 id="judgeResult"></h3> <p><strong>正解：</strong><span id="correctAnswer"></span></p>
         <p><strong>解説：</strong><span id="explanation"></span></p>
       </div>
+
       <div class="nav">
-        <button id="prevBtn" type="button">前へ</button>
         <button id="submitBtn" type="button">回答する</button>
-        <button id="nextBtn" type="button">次へ</button>
       </div>
     </section>
 
-    <!-- 結果 -->
     <section id="results" class="hidden" data-route="results">
       <h2>結果</h2>
       <p>正答数：<span id="finalCorrect"></span> / <span id="totalQuestions"></span></p>
@@ -113,7 +110,6 @@
       </div>
     </section>
 
-    <!-- ダッシュボード -->
     <section id="dashboard" class="hidden" data-route="dashboard">
       <h2>ダッシュボード</h2>
       <p>匿名ID：<span id="anonIdLabel"></span></p>
