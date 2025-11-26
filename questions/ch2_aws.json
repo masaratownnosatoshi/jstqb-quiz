@@ -6,17 +6,16 @@
     "category": "AWS",
     "style": "用語",
     "type": "単一選択",
-    "question": "AWS環境における「静的テスト（レビュー）」の対象として適切なものはどれか。",
+    "question": "AWS環境での「静的テスト（レビュー）」の対象として適切なものはどれか。",
     "options": [
-      "CloudFormationやTerraformなどのIaC（Infrastructure as Code）テンプレート",
-      "実行中のEC2インスタンスのCPU温度",
-      "データセンターの物理的な警備体制",
-      "AWSマネジメントコンソールの配色"
+      "IaCテンプレート（CloudFormation/Terraform）",
+      "CPU温度",
+      "警備体制",
+      "コンソールの配色"
     ],
     "answer": [
-      "CloudFormationやTerraformなどのIaC（Infrastructure as Code）テンプレート"
+      "IaCテンプレート（CloudFormation/Terraform）"
     ],
-    "explanation": "クラウドではインフラもコード化（IaC）されるため、インフラ構築前にコードレビューを行うことで構成ミスを防ぐことができます。",
-    "tags": ["第2章", "AWS", "用語", "K2"]
+    "explanation": "インフラコードのレビューにより構成ミスを早期発見できます。"
   }
 ]

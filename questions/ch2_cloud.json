@@ -6,17 +6,16 @@
     "category": "クラウド",
     "style": "用語",
     "type": "単一選択",
-    "question": "クラウドサービスの品質評価において、システムの稼働率や応答時間などを定量的に示す指標はどれか。",
+    "question": "クラウドサービスの品質評価（稼働率など）を示す指標はどれか。",
     "options": [
-      "SLA（Service Level Agreement） / SLO（Service Level Objective）",
+      "SLA / SLO",
       "WBS",
-      "LOC（Lines of Code）",
-      "チームの平均年齢"
+      "LOC",
+      "平均年齢"
     ],
     "answer": [
-      "SLA（Service Level Agreement） / SLO（Service Level Objective）"
+      "SLA / SLO"
     ],
-    "explanation": "クラウドサービスの品質保証において、可用性や性能の目標値を示すSLOと、契約としてのSLAは中心的なメトリクスです。",
-    "tags": ["第2章", "クラウド", "用語", "K2"]
+    "explanation": "可用性や性能の目標値（SLO）と契約（SLA）が品質基準となります。"
   }
 ]
