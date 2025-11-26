@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 テスト対策くん — 修正版v16
- * 対応: データ型不一致やライブラリ未ロードによるクラッシュを徹底回避
+ * JSTQB ALTM v3.0 テスト対策くん — 修正版v17
+ * 対応: stats is not defined エラーの修正（不要な集計ロジックの削除）
  */
 
 // ====== 初期化・状態 ======
@@ -71,8 +71,6 @@ function showRoute(route) {
     }
   }
   location.hash = '#' + route;
-  
-  // 画面切り替え時にスクロールをトップへ
   window.scrollTo(0, 0);
 }
 
@@ -423,7 +421,7 @@ function renderQuestions(questions) {
   }
 }
 
-// ====== 回答ロジック（超・堅牢化） ======
+// ====== 回答ロジック ======
 function submitAnswer() {
   try {
     const q = sessionQuestions[current];
@@ -436,7 +434,6 @@ function submitAnswer() {
     const submitBtn = document.getElementById('submitBtn');
     const scoreEl = document.getElementById('score');
 
-    // 解説表示中なら次へ
     if (isAnswerChecked) {
       if (current < sessionQuestions.length - 1) {
         current++;
@@ -459,25 +456,23 @@ function submitAnswer() {
     if (Array.isArray(q.options)) opts = q.options;
     else if (Array.isArray(q.choices)) opts = q.choices;
 
-    // 正解インデックスの計算（安全策）
     let correctIndices = [];
     let rawAnswer = [];
     if (Array.isArray(q.answer)) rawAnswer = q.answer;
     else if (q.answer !== undefined) rawAnswer = [q.answer];
 
     if (rawAnswer.length > 0 && typeof rawAnswer[0] === 'string') {
-      // 文字列比較（安全に）
       correctIndices = rawAnswer.map(ansStr => {
         return opts.findIndex(opt => String(opt).trim() === String(ansStr).trim());
       }).filter(idx => idx !== -1);
     } else {
-      // 数値比較
       correctIndices = rawAnswer.map(v => parseInt(v, 10));
     }
     correctIndices.sort((a, b) => a - b);
 
-    // 正誤判定
     const ok = eqSetCompat(selected, correctIndices);
+    
+    // 詳細履歴に追加
     pushTempDetail(q, ok);
     
     if (ok) {
@@ -485,18 +480,9 @@ function submitAnswer() {
       if (scoreEl) scoreEl.textContent = correctCount;
     }
     
-    // 集計データの更新
-    if (q.chapter) {
-      const oldVal = stats.chapter.get(q.chapter) || 0;
-      stats.chapter.set(q.chapter, oldVal + (ok ? 1 : 0));
-    }
-    const lvl = q.klevel || q.level;
-    if (lvl) {
-      const oldVal = stats.klevel.get(lvl) || 0;
-      stats.klevel.set(lvl, oldVal + (ok ? 1 : 0));
-    }
+    // ★修正: ここにあった stats.chapter... の更新処理を削除しました
+    // stats変数は廃止済みのため、ここがエラー原因でした
 
-    // 結果表示
     if (judgeEl) {
       if (ok) {
         judgeEl.textContent = '正解！';
@@ -621,7 +607,6 @@ function finishSession() {
 }
 
 function drawResultCharts(sourceData, chapterCanvasId, kLevelCanvasId) {
-  // ライブラリロードチェック（ここが重要）
   if (typeof Chart === 'undefined') {
     console.warn('Chart.js is not loaded.');
     return;
