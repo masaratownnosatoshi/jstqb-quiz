@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 模擬試験（拡張版） — GitHub Pages対応版
- * 修正版：選択肢順序修正、解説表示機能追加
+ * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版
+ * 対応: questionプロパティの読み込み / 正解文字列のインデックス変換
  */
 
 // ====== 初期化・状態 ======
@@ -25,10 +25,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   onClick('#submitBtn', submitAnswer);
   onClick('#restartBtn', restart);
   onClick('#goHomeBtn', goHome);
-  
-  // prev/nextボタンはロジック変更に伴い今回は未使用（必要なら復活可）
-  // onClick('#prevBtn', prev);
-  // onClick('#nextBtn', next);
 
   // ハッシュルーター
   window.addEventListener('hashchange', () => {
@@ -244,7 +240,7 @@ function getCurrentConditionsFromUI() {
     category: f.cats[0] || null,
     klevel: f.levels[0] || null,
   };
-  const countEl = document.getElementById('numSelect'); // 修正: ID合わせ
+  const countEl = document.getElementById('numSelect'); 
   if (countEl && countEl.value) {
     const n = parseInt(countEl.value, 10);
     if (!Number.isNaN(n) && n > 0) numToAsk = n;
@@ -286,16 +282,20 @@ function renderQuestions(questions) {
   // メタ情報
   if (idxEl) idxEl.textContent = `${current + 1} / ${questions.length}`;
   if (chapterEl) chapterEl.textContent = q.chapter || '';
-  if (levelEl) levelEl.textContent = q.klevel || '';
+  // klevelが無ければlevelを使う
+  if (levelEl) levelEl.textContent = q.klevel || q.level || '';
 
-  // 問題文
-  if (textEl) textEl.textContent = q.text || q.title || '(問題文)';
+  // ★修正: JSONの "question" プロパティを優先して表示
+  if (textEl) textEl.textContent = q.question || q.text || q.title || '(問題文)';
 
   // 選択肢生成
   if (choicesEl) {
     choicesEl.innerHTML = '';
     const opts = Array.isArray(q.options) ? q.options : (Array.isArray(q.choices) ? q.choices : []);
     
+    // ★修正: JSONの type:"複数選択" にも対応
+    const isMulti = q.multi || q.type === '複数選択';
+
     opts.forEach((optText, i) => {
       const div = document.createElement('div');
       div.style.padding = '8px 0';
@@ -306,7 +306,7 @@ function renderQuestions(questions) {
       label.style.cursor = 'pointer';
 
       const input = document.createElement('input');
-      input.type = q.multi ? 'checkbox' : 'radio';
+      input.type = isMulti ? 'checkbox' : 'radio';
       input.name = 'answer';
       input.value = String(i);
       input.style.marginRight = '10px';
@@ -333,7 +333,6 @@ function renderDashboard() {
     li.textContent = `${idx + 1}. 正答 ${h.correct}/${h.total} - ${new Date(h.ts).toLocaleString()}`;
     listEl.appendChild(li);
   });
-  // ※チャート描画ロジックは省略（必要ならChart.jsコードを追加）
 }
 
 // ====== クイズ進行 ======
@@ -407,10 +406,21 @@ function submitAnswer() {
     return;
   }
 
-  const correctIndices = Array.isArray(q.correctIndices)
-    ? q.correctIndices
-    : (Array.isArray(q.answer) ? q.answer : [q.answer]).map(v => parseInt(v, 10));
+  // ★修正: 正解が「文字列の配列」の場合、「インデックス番号」に変換する
+  let correctIndices = [];
+  const opts = Array.isArray(q.options) ? q.options : (Array.isArray(q.choices) ? q.choices : []);
 
+  // 渡された正解データ（配列か単一の値か）
+  const rawAnswer = Array.isArray(q.answer) ? q.answer : [q.answer];
+
+  // 正解データが「文字列」ならインデックスを探す、「数値」ならそのまま使う
+  if (rawAnswer.length > 0 && typeof rawAnswer[0] === 'string') {
+    correctIndices = rawAnswer.map(ansStr => opts.indexOf(ansStr)).filter(idx => idx !== -1);
+  } else {
+    correctIndices = rawAnswer.map(v => parseInt(v, 10));
+  }
+
+  // 判定
   const ok = eqSetCompat(selected, correctIndices);
   pushTempDetail(q.id || current, ok);
   
@@ -421,21 +431,23 @@ function submitAnswer() {
 
   // 集計
   if (q.chapter) stats.chapter.set(q.chapter, (stats.chapter.get(q.chapter) || 0) + (ok ? 1 : 0));
-  if (q.klevel) stats.klevel.set(q.klevel, (stats.klevel.get(q.klevel) || 0) + (ok ? 1 : 0));
+  // klevelが無ければlevelを使う
+  const lvl = q.klevel || q.level;
+  if (lvl) stats.klevel.set(lvl, (stats.klevel.get(lvl) || 0) + (ok ? 1 : 0));
 
   // --- 解説表示 ---
   if (judgeEl) {
     if (ok) {
       judgeEl.textContent = '正解！';
-      judgeEl.className = 'judge-correct'; // CSS用クラス
+      judgeEl.className = 'judge-correct'; 
     } else {
       judgeEl.textContent = 'ざんねん…';
       judgeEl.className = 'judge-incorrect';
     }
   }
 
-  // 正解テキスト
-  const opts = Array.isArray(q.options) ? q.options : (Array.isArray(q.choices) ? q.choices : []);
+  // 正解テキスト表示
+  // 常にインデックスから正しい選択肢文言を引っ張ってくる
   const correctText = correctIndices.map(i => opts[i]).join(', ');
   if (correctEl) correctEl.textContent = correctText;
 
@@ -473,7 +485,7 @@ function finishSession() {
   document.getElementById('totalQuestions').textContent = sessionQuestions.length;
   document.getElementById('finalRate').textContent = Math.round((correctCount / sessionQuestions.length) * 100);
   
-  renderDashboard(); // グラフ更新等はDashboard側で代用（簡易実装）
+  renderDashboard(); 
 }
 
 function restart() {
