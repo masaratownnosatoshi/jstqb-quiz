@@ -513,4 +513,119 @@ function submitAnswer() {
     // 3. 正解の文章部分
     const textSpan = document.createElement('span');
     textSpan.style.fontSize = '0.9em';
-    text
+    textSpan.style.color = '#555';
+    textSpan.innerHTML = correctTextFull; 
+
+    correctEl.appendChild(labelSpan);
+    correctEl.appendChild(br);
+    correctEl.appendChild(textSpan);
+  }
+
+  if (explainEl) {
+    explainEl.textContent = q.explanation || '（解説データがありません）';
+  }
+  if (feedbackEl) {
+    feedbackEl.classList.remove('hidden');
+  }
+  
+  if (submitBtn) {
+    if (current < sessionQuestions.length - 1) {
+      submitBtn.textContent = '次の問題へ';
+    } else {
+      submitBtn.textContent = '結果を見る';
+    }
+  }
+
+  isAnswerChecked = true;
+  inputs.forEach(i => i.disabled = true);
+}
+
+// ====== 開始処理 ======
+function startWithFilters() {
+  current = 0; 
+  correctCount = 0; 
+  tempDetails = [];
+  const cond = getCurrentConditionsFromUI();
+  
+  loadQuestionsByIndex(cond).then(raw => {
+    if (!raw || !raw.length) { 
+      alert('条件に合う問題が見つかりませんでした。\n(index.jsonの読み込みに失敗しているか、条件が厳しすぎます)'); 
+      return; 
+    }
+    
+    const filtered = raw.filter(q => matchesQuestion(q, cond));
+    if (!filtered.length) { 
+      alert('選択された条件に合致する問題がありませんでした。'); 
+      return; 
+    }
+
+    sessionQuestions = reservoirSample(filtered, numToAsk);
+    showRoute('quiz');
+    renderQuestions(sessionQuestions);
+    
+    const scoreEl = document.getElementById('score');
+    if (scoreEl) scoreEl.textContent = '0';
+  });
+}
+
+function getCurrentConditionsFromUI() {
+  const f = collectFilters();
+  const cond = {
+    chapter: f.chapters[0] || null,
+    category: f.cats[0] || null,
+    klevel: f.levels[0] || null,
+  };
+  const countEl = document.getElementById('numSelect'); 
+  if (countEl && countEl.value) {
+    numToAsk = parseInt(countEl.value, 10);
+  }
+  return cond;
+}
+
+function finishSession() {
+  const user = getActiveUserId();
+  saveHistory(user, { 
+    correct: correctCount, 
+    total: sessionQuestions.length, 
+    ts: Date.now(), 
+    details: tempDetails 
+  });
+  
+  showRoute('results');
+  
+  const finalCorrect = document.getElementById('finalCorrect');
+  const totalQuestions = document.getElementById('totalQuestions');
+  const finalRate = document.getElementById('finalRate');
+  
+  if (finalCorrect) finalCorrect.textContent = correctCount;
+  if (totalQuestions) totalQuestions.textContent = sessionQuestions.length;
+  if (finalRate) {
+    const rate = Math.round((correctCount / sessionQuestions.length) * 100);
+    finalRate.textContent = rate;
+  }
+  
+  renderDashboard(); 
+}
+
+function renderDashboard() {
+  const user = getActiveUserId();
+  const hist = getHistory(user);
+  const listEl = document.getElementById('historyList');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  
+  hist.forEach((h, idx) => {
+    const li = document.createElement('li');
+    const dateStr = new Date(h.ts).toLocaleString();
+    li.textContent = (idx + 1) + '. 正答 ' + h.correct + '/' + h.total + ' - ' + dateStr;
+    listEl.appendChild(li);
+  });
+}
+
+function restart() { 
+  startWithFilters(); 
+}
+
+function goHome() { 
+  showRoute('home'); 
+}
