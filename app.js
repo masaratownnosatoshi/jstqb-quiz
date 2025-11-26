@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v2
- * 対応: ABCラベル表示 / シナリオ改行 / 正解の記号表示
+ * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v3
+ * 対応: シンタックスエラー回避（DOM操作への書き換え）、改行のHTML対応
  */
 
 // ====== 初期化・状態 ======
@@ -63,7 +63,6 @@ function getActiveUserId() {
 
 function eqSetCompat(selectedArr, answerValue) {
   const bArr = Array.isArray(answerValue) ? answerValue : [answerValue];
-  // 配列の中身が文字列でも数値でも比較できるように
   if (selectedArr.length !== bArr.length) return false;
   const a = new Set(selectedArr.map(String));
   const b = new Set(bArr.map(String));
@@ -92,7 +91,7 @@ function resolveRepoUrl(input) {
   return new URL(input, base).href;
 }
 
-// ====== 履歴・DB関連（省略なし） ======
+// ====== 履歴・DB関連 ======
 function pushTempDetail(qid, ok) { tempDetails.push({ id: qid, correct: !!ok }); }
 function getHistory(user) { const key = `altm_history_${user || 'guest'}`; const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }
 function saveHistory(user, session) { const key = `altm_history_${user || 'guest'}`; const h = getHistory(user); h.unshift(session); if (h.length > 100) h.length = 100; localStorage.setItem(key, JSON.stringify(h)); }
@@ -120,147 +119,4 @@ async function idbPut(store, key, value) { if (!_db) await openDb(); return new 
 async function fetchJSON(inputUrl) {
   const finalUrl = resolveRepoUrl(inputUrl);
   try {
-    const res = await fetch(finalUrl, { cache: 'no-store' });
-    if (res.status === 404) return { ok: false, status: 404, json: null, url: finalUrl };
-    if (!res.ok) return { ok: false, status: res.status, json: null, url: finalUrl };
-    const json = await res.json();
-    return { ok: true, status: 200, json, url: finalUrl };
-  } catch (e) {
-    console.error('[json] fetch error', inputUrl, e);
-    return { ok: false, status: 0, json: null, url: finalUrl };
-  }
-}
-
-async function loadManifest() {
-  const cached = await idbGet('manifest', 'index');
-  if (cached && Array.isArray(cached.chunks)) return cached.chunks;
-  const { ok, json } = await fetchJSON('questions/index.json');
-  if (!ok) return null;
-  const chunks = Array.isArray(json?.chunks) ? json.chunks : (Array.isArray(json) ? json : []);
-  await idbPut('manifest', 'index', { chunks });
-  return chunks;
-}
-
-async function loadChunk(path) {
-  const cached = await idbGet('questionChunks', path);
-  if (cached) return Array.isArray(cached) ? cached : (Array.isArray(cached?.questions) ? cached.questions : []);
-  const { ok, json } = await fetchJSON(path);
-  if (!ok) return [];
-  const arr = Array.isArray(json) ? json : (Array.isArray(json?.questions) ? json.questions : []);
-  await idbPut('questionChunks', path, json);
-  return arr;
-}
-
-async function loadQuestionsByIndex(conditions = {}) {
-  const idxChunks = await loadManifest();
-  if (!idxChunks) return []; // マニフェスト必須
-  
-  let targetChunks = idxChunks.filter(c => {
-    const chOK = !conditions.chapter  || c.chapter === conditions.chapter;
-    const catOK = !conditions.category || c.category === conditions.category;
-    return chOK && catOK;
-  });
-  if (!targetChunks.length) targetChunks = idxChunks;
-
-  const all = [];
-  for (const c of targetChunks) {
-    const part = await loadChunk(c.path);
-    if (!Array.isArray(part)) continue;
-    all.push(...part);
-  }
-  return all;
-}
-
-function collectFilters() {
-  const chapters = [...document.querySelectorAll('.chapterFilter:checked')].map(i => i.value);
-  const levels   = [...document.querySelectorAll('.levelFilter:checked')].map(i => i.value);
-  const cats     = [...document.querySelectorAll('.categoryFilter:checked')].map(i => i.value);
-  return { chapters, levels, cats };
-}
-
-function matchesQuestion(q, cond) {
-  const chOK = !cond.chapter || String(q.chapter) === String(cond.chapter) || (q.chapter||'').trim() === (cond.chapter||'').trim();
-  const catOK = !cond.category || (q.category||'').trim() === (cond.category||'').trim();
-  const kOK  = !cond.klevel || (q.klevel||'').trim() === (cond.klevel||'').trim();
-  return chOK && catOK && kOK;
-}
-
-// ====== UI構築 ======
-function renderQuestions(questions) {
-  const q = questions[current];
-  const textEl = document.getElementById('questionText');
-  const choicesEl = document.getElementById('choices');
-  const idxEl = document.getElementById('progress');
-  const feedbackEl = document.getElementById('feedback');
-  const submitBtn = document.getElementById('submitBtn');
-  const chapterEl = document.getElementById('chapter');
-  const levelEl = document.getElementById('level');
-
-  if (!q) {
-    alert('問題がありません。');
-    return;
-  }
-  
-  // リセット
-  isAnswerChecked = false;
-  if (feedbackEl) feedbackEl.classList.add('hidden');
-  if (submitBtn) {
-    submitBtn.textContent = '回答する';
-    submitBtn.disabled = false;
-  }
-
-  // メタ情報
-  if (idxEl) idxEl.textContent = `${current + 1} / ${questions.length}`;
-  if (chapterEl) chapterEl.textContent = q.chapter || '';
-  if (levelEl) levelEl.textContent = q.klevel || q.level || '';
-  if (textEl) textEl.textContent = q.question || q.text || q.title || '(問題文)';
-
-  // 選択肢生成 (ABC対応)
-  if (choicesEl) {
-    choicesEl.innerHTML = '';
-    const opts = Array.isArray(q.options) ? q.options : (Array.isArray(q.choices) ? q.choices : []);
-    const isMulti = q.multi || q.type === '複数選択';
-
-    opts.forEach((optText, i) => {
-      const div = document.createElement('div');
-      div.style.padding = '8px 0';
-      
-      const label = document.createElement('label');
-      label.style.display = 'flex';
-      label.style.alignItems = 'center'; // 上揃えではなく中央揃え（複数行の場合は調整可）
-      label.style.cursor = 'pointer';
-
-      // 隠しラジオ/チェックボックス
-      const input = document.createElement('input');
-      input.type = isMulti ? 'checkbox' : 'radio';
-      input.name = 'answer';
-      input.value = String(i);
-      input.style.display = 'none'; // デザインされたタグを使うので隠す
-
-      // ABCタグ
-      const tagSpan = document.createElement('span');
-      tagSpan.className = 'option-tag';
-      tagSpan.textContent = OPTION_LABELS[i] || '?';
-
-      // 選択肢テキスト
-      const textSpan = document.createElement('span');
-      textSpan.className = 'option-content'; // CSSで選択時のスタイル当てる用
-      textSpan.textContent = optText;
-      textSpan.style.flex = '1';
-
-      // 構成: [Input(Hidden)] [Label: [Tag(A)] [Text] ]
-      label.appendChild(input);
-      label.appendChild(tagSpan);
-      label.appendChild(textSpan);
-      div.appendChild(label);
-      choicesEl.appendChild(div);
-    });
-  }
-}
-
-// ====== 回答ロジック ======
-function submitAnswer() {
-  const q = sessionQuestions[current];
-  if (!q) return;
-
-  const feedbackEl = document.getElementById('
+    const res = await fetch(finalUrl
