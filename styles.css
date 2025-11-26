@@ -13,12 +13,24 @@ section{margin-bottom:16px;}
 #quiz,#results{background:#fff;border-radius:8px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.06);} 
 #chapter,#level{color:#666;margin-bottom:4px;} 
 
-/* === 修正点: シナリオの改行を有効にし、読みやすくする === */
 #questionText{
   margin-top:4px;
-  line-height: 1.8;          /* 行間を少し広げる */
-  white-space: pre-wrap;     /* \n を改行として表示する */
+  line-height: 1.8;
+  white-space: pre-wrap;
 } 
+
+/* ★追加: 以前間違えた問題のアラート表示 */
+.retry-alert {
+  font-size: 0.85rem;
+  color: #d9534f; /* 赤系 */
+  background-color: #fcefdc; /* 薄いオレンジ */
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  border: 1px solid #f5c6cb;
+}
 
 form label{display:block;padding:8px;background:#fafafa;border-radius:6px;margin-bottom:8px;border:1px solid #eee;cursor:pointer} 
 form input{margin-right:8px;} 
@@ -31,11 +43,9 @@ button:disabled{opacity:.5;cursor:not-allowed;}
 summary{cursor:pointer;} 
 footer{margin-top:24px;color:#777;text-align:center;} 
 
-/* 正解・不正解の色設定 */
 .judge-correct { color: #28a745; font-weight: bold; font-size: 1.2em; margin: 0; }
 .judge-incorrect { color: #dc3545; font-weight: bold; font-size: 1.2em; margin: 0; }
 
-/* === 追加: 選択肢のABCタグ === */
 .option-tag {
   display: inline-block;
   width: 24px;
@@ -48,18 +58,19 @@ footer{margin-top:24px;color:#777;text-align:center;}
   font-weight: bold;
   font-size: 0.9em;
   margin-right: 10px;
-  flex-shrink: 0; /* ラベルが潰れないようにする */
+  flex-shrink: 0;
 }
-/* 選択済みや正解時の強調用（必要に応じて拡張可） */
-input:checked + .option-content .option-tag {
-  background-color: var(--accent);
-  color: #000;
-}
+input:checked + .option-tag + .option-content { font-weight: bold; } 
+/* (注: CSSセレクタでラベル全体の色を変えるにはJS補助かhasが必要だが、簡易的にこれでも可) */
 
-/* モバイル対応 */
 #meta{position:sticky;top:0;z-index:100;background:#fff;} 
 .nav{position:sticky;bottom:0;z-index:90;background:#fff;border-top:1px solid #eee;padding:12px;} 
 canvas{max-width:100%;height:auto;} 
+
+/* ダッシュボードのカード */
+.cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.card { flex: 1; min-width: 250px; background: #f9f9f9; padding: 16px; border-radius: 8px; border: 1px solid #eee; }
+.card h3 { margin-top: 0; font-size: 1.1rem; color: #555; }
 
 @media (max-width: 600px) {
   .container { padding: 12px; }
@@ -75,10 +86,11 @@ canvas{max-width:100%;height:auto;}
 @media (prefers-color-scheme: dark) {
   :root { --bg:#121212; --primary:#8ab4f8; --accent:#ffd666; }
   body { background: var(--bg); color: #eee; }
-  .filters, #quiz, #results, #meta { background: #1d1d1d; box-shadow: none; border: 1px solid #333; }
+  .filters, #quiz, #results, #meta, .card { background: #1d1d1d; box-shadow: none; border: 1px solid #333; }
   form label { background: #222; border-color: #333; }
   .nav { background: #1d1d1d; border-top-color: #333; }
   #feedback { background-color: #2a2a2a; border-color: #444; }
-  .option-tag { color: #000; } /* ダークモードでも文字が見えるように */
+  .option-tag { color: #000; }
+  .retry-alert { background-color: #3e2c2c; border-color: #5c3838; color: #ff8888; }
   footer { color: #999; }
 }

@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v12
- * 対応: 複数条件（章・カテゴリ）の同時選択ロジック修正
+ * JSTQB ALTM v3.0 テスト対策くん — 修正版v13
+ * 対応: ダッシュボード集計・グラフ描画の完全実装、過去ミス表示機能
  */
 
 // ====== 初期化・状態 ======
@@ -10,9 +10,13 @@ let current = 0;
 let correctCount = 0;
 let isAnswerChecked = false;
 
+// チャートインスタンス保持用
 let chartChapter = null;
 let chartKLevel = null;
-let tempDetails = [];          
+let dbChartChapter = null; // ダッシュボード用
+let dbChartKLevel = null;  // ダッシュボード用
+
+let tempDetails = []; // セッション履歴
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
@@ -27,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     onClick('#submitBtn', submitAnswer);
     onClick('#restartBtn', restart);
     onClick('#goHomeBtn', goHome);
+    onClick('#clearDataBtn', clearLocalData); // データ削除ボタン
 
     window.addEventListener('hashchange', () => {
       let route = location.hash.replace('#', '');
@@ -37,6 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const anonEl = document.getElementById('anonIdLabel');
     if (anonEl) anonEl.textContent = getActiveUserId();
+    
+    // 初期ロード時にダッシュボードなら描画
+    if (r === 'dashboard') renderDashboard();
+
   } catch (e) {
     console.error('Init Error:', e);
     alert('初期化中にエラーが発生しました: ' + e.message);
@@ -85,6 +94,7 @@ function getActiveUserId() {
     return inputVal;
   }
   if (stored) return stored;
+  
   const anon = createAnonId();
   localStorage.setItem('altm_active_user', anon);
   return anon;
@@ -101,7 +111,6 @@ function eqSetCompat(selectedArr, answerValue) {
   return true;
 }
 
-// シャッフル関数
 function shuffleArray(array) {
   const res = array.slice();
   for (let i = res.length - 1; i > 0; i--) {
@@ -129,7 +138,8 @@ function pushTempDetail(q, ok) {
     id: q.id, 
     correct: !!ok,
     chapter: q.chapter || "未分類",
-    klevel: q.klevel || q.level || "不明"
+    klevel: q.klevel || q.level || "不明",
+    ts: Date.now() // タイムスタンプ追加
   });
 }
 
@@ -142,12 +152,44 @@ function getHistory(user) {
 function saveHistory(user, session) {
   const key = 'altm_history_' + (user || 'guest');
   const h = getHistory(user);
+  // session = { correct, total, ts, details: [...] }
   h.unshift(session);
-  if (h.length > 100) h.length = 100;
+  if (h.length > 100) h.length = 100; // 最新100件保持
   localStorage.setItem(key, JSON.stringify(h));
 }
 
-// IndexedDB
+function clearLocalData() {
+  if (!confirm("この端末の学習履歴をすべて削除しますか？")) return;
+  const user = getActiveUserId();
+  const key = 'altm_history_' + (user || 'guest');
+  localStorage.removeItem(key);
+  renderDashboard();
+  alert("削除しました");
+}
+
+// ★追加: 直近で間違えた問題かチェックする関数
+function isLastAnswerIncorrect(qId) {
+  const user = getActiveUserId();
+  const hist = getHistory(user);
+  if (!hist || hist.length === 0) return false;
+
+  // 新しい履歴から順に検索
+  for (const session of hist) {
+    if (session.details && Array.isArray(session.details)) {
+      // このセッションに該当問題が含まれているか
+      const detail = session.details.find(d => d.id === qId);
+      if (detail) {
+        // 見つかったら、その結果が「不正解(!correct)」ならtrueを返す
+        // 「正解」ならfalseを返す（解決済みとみなす）
+        return !detail.correct;
+      }
+    }
+  }
+  // 履歴に存在しない場合はfalse
+  return false;
+}
+
+// ====== IndexedDB ======
 const DB_NAME = 'ALTM_DB';
 const DB_VERSION = 2;
 let _db;
@@ -243,37 +285,23 @@ async function updateTotalCount() {
   }
 }
 
-// --- 【修正】複数条件対応の読み込みロジック ---
+// 複数条件対応ロード
 async function loadQuestionsByIndex(conditions) {
   const idxChunks = await loadManifest();
   if (!idxChunks) return [];
   
   let targetChunks = idxChunks.filter(c => {
     const cond = conditions || {};
-    
-    // 修正: cond.chapters (配列) に c.chapter が含まれているか確認
     if (cond.chapters && cond.chapters.length > 0) {
       if (!cond.chapters.includes(c.chapter)) return false;
     }
-    
-    // 修正: cond.categories (配列) に c.category が含まれているか確認
     if (cond.categories && cond.categories.length > 0) {
       if (!cond.categories.includes(c.category)) return false;
     }
-    
-    // Kレベルはindex.jsonに情報がない場合が多いのでここでは弾かず、次のステップ(matchesQuestion)で厳密に判定
-    // ただし、明らかに違うと分かっている場合は弾いても良い
-    
     return true;
   });
 
-  // もしフィルタ結果が0件なら、安全策として全ロードしてからフィルタする
-  if (targetChunks.length === 0) {
-    // フィルタが厳しすぎるだけかもしれないので、全件対象にするのはリスクがあるが、
-    // UIで選択されているのにindex.jsonのメタデータ不備で弾かれるのを防ぐため、
-    // ここでは「index.jsonでヒットしなければ全件ロード」とする
-    targetChunks = idxChunks;
-  }
+  if (targetChunks.length === 0) targetChunks = idxChunks;
 
   const all = [];
   for (const c of targetChunks) {
@@ -283,37 +311,26 @@ async function loadQuestionsByIndex(conditions) {
   return all;
 }
 
-// --- 【修正】UIから配列として条件を取得 ---
 function collectFilters() {
-  // 配列として値を取得
   const chapters = Array.from(document.querySelectorAll('.chapterFilter:checked')).map(i => i.value);
   const levels   = Array.from(document.querySelectorAll('.levelFilter:checked')).map(i => i.value);
   const cats     = Array.from(document.querySelectorAll('.categoryFilter:checked')).map(i => i.value);
   return { chapters, levels, cats };
 }
 
-// --- 【修正】配列内の有無で判定 ---
 function matchesQuestion(q, cond) {
-  // 章チェック (OR条件)
   if (cond.chapters && cond.chapters.length > 0) {
-    // データの章が、選択された章リストに含まれているか
     const qCh = (q.chapter || '').trim();
     if (!cond.chapters.some(sel => sel === qCh)) return false;
   }
-
-  // カテゴリチェック (OR条件)
   if (cond.categories && cond.categories.length > 0) {
     const qCat = (q.category || '').trim();
     if (!cond.categories.some(sel => sel === qCat)) return false;
   }
-
-  // レベルチェック (OR条件)
   if (cond.klevels && cond.klevels.length > 0) {
     const qK = (q.klevel || q.level || '').trim();
-    // klevel未定義の問題は除外するか？ -> 今回は除外しない（または「その他」扱い）
     if (qK && !cond.klevels.some(sel => sel === qK)) return false;
   }
-
   return true;
 }
 
@@ -344,6 +361,21 @@ function renderQuestions(questions) {
   if (chapterEl) chapterEl.textContent = q.chapter || '';
   if (levelEl) levelEl.textContent = q.klevel || q.level || '';
   
+  // ★修正: 「以前間違えた問題です」表示
+  // 既存のバッジがあれば削除
+  const existingBadge = document.querySelector('.retry-alert');
+  if (existingBadge) existingBadge.remove();
+
+  // 直近ミスのチェック
+  if (isLastAnswerIncorrect(q.id)) {
+    // 挿入場所: chapterEl/levelEl の後、questionText の前あたり、または questionText の直前
+    const badge = document.createElement('div');
+    badge.className = 'retry-alert';
+    badge.textContent = '以前間違えた問題です';
+    // textEl (h2) の直前に挿入
+    textEl.parentNode.insertBefore(badge, textEl);
+  }
+
   const qText = q.question || q.text || q.title || '(問題文)';
   if (textEl) textEl.textContent = qText;
 
@@ -441,6 +473,16 @@ function submitAnswer() {
     if (scoreEl) scoreEl.textContent = correctCount;
   }
   
+  if (q.chapter) {
+    const oldVal = stats.chapter.get(q.chapter) || 0;
+    stats.chapter.set(q.chapter, oldVal + (ok ? 1 : 0));
+  }
+  const lvl = q.klevel || q.level;
+  if (lvl) {
+    const oldVal = stats.klevel.get(lvl) || 0;
+    stats.klevel.set(lvl, oldVal + (ok ? 1 : 0));
+  }
+
   if (judgeEl) {
     if (ok) {
       judgeEl.textContent = '正解！';
@@ -490,13 +532,11 @@ function submitAnswer() {
   inputs.forEach(i => i.disabled = true);
 }
 
-// ====== 開始処理（配列条件渡し） ======
+// ====== 開始処理 ======
 function startWithFilters() {
   current = 0; 
   correctCount = 0; 
   tempDetails = [];
-  
-  // 修正: 配列として条件を取得
   const cond = getCurrentConditionsFromUI();
   
   loadQuestionsByIndex(cond).then(raw => {
@@ -505,9 +545,7 @@ function startWithFilters() {
       return; 
     }
     
-    // 修正: 配列対応のフィルタ関数を使用
     const filtered = raw.filter(q => matchesQuestion(q, cond));
-    
     if (!filtered.length) { 
       alert('選択された条件に合致する問題がありませんでした。'); 
       return; 
@@ -526,9 +564,8 @@ function startWithFilters() {
 
 function getCurrentConditionsFromUI() {
   const f = collectFilters();
-  // 修正: 配列のまま渡す
   const cond = {
-    chapters: f.chapters, // ['第1章', '第3章'] など
+    chapters: f.chapters, 
     categories: f.cats,
     klevels: f.levels,
   };
@@ -562,14 +599,18 @@ function finishSession() {
   }
   
   renderDashboard();
-  drawResultCharts();
+  drawResultCharts(tempDetails, 'chapterChart', 'kChart');
 }
 
-function drawResultCharts() {
+// ====== チャート描画 (共通) ======
+function drawResultCharts(sourceData, chapterCanvasId, kLevelCanvasId) {
   const chapterStats = {};
   const kLevelStats = {};
 
-  tempDetails.forEach(d => {
+  sourceData.forEach(d => {
+    // 履歴データ構造(details内)も、一時データ(tempDetails)も {chapter:..., klevel:..., correct:...} を持つ前提
+    // ただし履歴データの場合は d が detail オブジェクト
+    
     const ch = d.chapter || '未分類';
     if (!chapterStats[ch]) chapterStats[ch] = { total: 0, correct: 0 };
     chapterStats[ch].total++;
@@ -589,7 +630,7 @@ function drawResultCharts() {
     const labels = Object.keys(statsObj);
     const data = labels.map(k => {
       const s = statsObj[k];
-      return Math.round((s.correct / s.total) * 100);
+      return s.total === 0 ? 0 : Math.round((s.correct / s.total) * 100);
     });
 
     return new Chart(ctx, {
@@ -611,23 +652,93 @@ function drawResultCharts() {
     });
   };
 
-  chartChapter = draw('chapterChart', chapterStats, '章別', chartChapter);
-  chartKLevel = draw('kChart', kLevelStats, 'Kレベル別', chartKLevel);
+  // 結果画面用かダッシュボード用かで変数管理を分けるため、ここでは戻り値を返さずグローバル変数を更新する形は取れない
+  // なので、finishSessionからは単純に呼び出し、ダッシュボードからは変数を受け取る形にするのが良いが、
+  // 簡易的に chartChapter/KLevel (結果用) と dbChartChapter/KLevel (ダッシュボード用) を使い分けるラッパーを作る
+
+  if (chapterCanvasId === 'chapterChart') {
+    chartChapter = draw(chapterCanvasId, chapterStats, '章別', chartChapter);
+    chartKLevel = draw(kLevelCanvasId, kLevelStats, 'Kレベル別', chartKLevel);
+  } else {
+    dbChartChapter = draw(chapterCanvasId, chapterStats, '章別 (累計)', dbChartChapter);
+    dbChartKLevel = draw(kLevelCanvasId, kLevelStats, 'Kレベル別 (累計)', dbChartKLevel);
+  }
 }
 
+// ====== ダッシュボード描画（修正） ======
 function renderDashboard() {
   const user = getActiveUserId();
   const hist = getHistory(user);
-  const listEl = document.getElementById('historyList');
-  if (!listEl) return;
-  listEl.innerHTML = '';
   
-  hist.forEach((h, idx) => {
-    const li = document.createElement('li');
-    const dateStr = new Date(h.ts).toLocaleString();
-    li.textContent = (idx + 1) + '. 正答 ' + h.correct + '/' + h.total + ' - ' + dateStr;
-    listEl.appendChild(li);
+  // 履歴リスト表示
+  const listEl = document.getElementById('historyList');
+  if (listEl) {
+    listEl.innerHTML = '';
+    hist.forEach((h, idx) => {
+      const li = document.createElement('li');
+      const dateStr = new Date(h.ts).toLocaleString();
+      li.textContent = (idx + 1) + '. 正答 ' + h.correct + '/' + h.total + ' - ' + dateStr;
+      listEl.appendChild(li);
+    });
+  }
+
+  // 累計データ計算
+  let totalAns = 0;
+  let totalCor = 0;
+  let allDetails = [];
+
+  hist.forEach(h => {
+    totalAns += h.total;
+    totalCor += h.correct;
+    if (h.details) {
+      allDetails = allDetails.concat(h.details);
+    }
   });
+
+  // 数値表示
+  const elAns = document.getElementById('totalAnswered');
+  const elCor = document.getElementById('totalCorrect');
+  const elRate = document.getElementById('totalRate');
+  
+  if (elAns) elAns.textContent = totalAns;
+  if (elCor) elCor.textContent = totalCor;
+  if (elRate) {
+    const r = totalAns === 0 ? 0 : Math.round((totalCor / totalAns) * 100);
+    elRate.textContent = r;
+  }
+
+  // 弱点分析（正答率の低い章トップ3）
+  const chStats = {};
+  allDetails.forEach(d => {
+    const ch = d.chapter || '未分類';
+    if (!chStats[ch]) chStats[ch] = { t: 0, c: 0 };
+    chStats[ch].t++;
+    if (d.correct) chStats[ch].c++;
+  });
+  
+  // 正答率計算してソート
+  const weakList = Object.keys(chStats).map(k => {
+    return {
+      name: k,
+      rate: chStats[k].t === 0 ? 0 : (chStats[k].c / chStats[k].t) * 100
+    };
+  }).sort((a, b) => a.rate - b.rate); // 低い順
+
+  const weakEl = document.getElementById('weakAreas');
+  if (weakEl) {
+    weakEl.innerHTML = '';
+    weakList.slice(0, 3).forEach(w => {
+      const li = document.createElement('li');
+      li.textContent = `${w.name} (${Math.round(w.rate)}%)`;
+      weakEl.appendChild(li);
+    });
+  }
+
+  // ダッシュボード用チャート描画
+  // データがない場合はスキップ
+  if (allDetails.length > 0) {
+    drawResultCharts(allDetails, 'chapterChartAll', 'kChartAll');
+  }
 }
 
 function restart() { 
