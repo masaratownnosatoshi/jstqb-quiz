@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 テスト対策くん — 修正版v15
- * 対応: 回答時のエラー回避強化（データ型チェックの厳密化）、デバッグ情報表示
+ * JSTQB ALTM v3.0 テスト対策くん — 修正版v16
+ * 対応: データ型不一致やライブラリ未ロードによるクラッシュを徹底回避
  */
 
 // ====== 初期化・状態 ======
@@ -18,7 +18,7 @@ let dbChartKLevel = null;
 
 let tempDetails = []; // セッション履歴
 
-const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
 document.addEventListener('DOMContentLoaded', () => {
   try {
@@ -71,6 +71,9 @@ function showRoute(route) {
     }
   }
   location.hash = '#' + route;
+  
+  // 画面切り替え時にスクロールをトップへ
+  window.scrollTo(0, 0);
 }
 
 // ====== ユーティリティ ======
@@ -98,7 +101,7 @@ function getActiveUserId() {
   return anon;
 }
 
-// 集合比較（配列の中身が同じか）
+// 集合比較（安全版）
 function eqSetCompat(selectedArr, correctArr) {
   if (!Array.isArray(selectedArr) || !Array.isArray(correctArr)) return false;
   if (selectedArr.length !== correctArr.length) return false;
@@ -420,7 +423,7 @@ function renderQuestions(questions) {
   }
 }
 
-// ====== 回答ロジック（修正強化） ======
+// ====== 回答ロジック（超・堅牢化） ======
 function submitAnswer() {
   try {
     const q = sessionQuestions[current];
@@ -456,20 +459,19 @@ function submitAnswer() {
     if (Array.isArray(q.options)) opts = q.options;
     else if (Array.isArray(q.choices)) opts = q.choices;
 
-    // 正解インデックスの計算（データ型の揺れを吸収）
+    // 正解インデックスの計算（安全策）
     let correctIndices = [];
     let rawAnswer = [];
     if (Array.isArray(q.answer)) rawAnswer = q.answer;
-    else if (q.answer !== undefined) rawAnswer = [q.answer]; // null/undefined対策
+    else if (q.answer !== undefined) rawAnswer = [q.answer];
 
     if (rawAnswer.length > 0 && typeof rawAnswer[0] === 'string') {
-      // 文字列で正解が指定されている場合、選択肢から探す
+      // 文字列比較（安全に）
       correctIndices = rawAnswer.map(ansStr => {
-        // 完全一致で探す（trimして比較）
-        return opts.findIndex(opt => opt.trim() === ansStr.trim());
+        return opts.findIndex(opt => String(opt).trim() === String(ansStr).trim());
       }).filter(idx => idx !== -1);
     } else {
-      // 数値インデックスの場合
+      // 数値比較
       correctIndices = rawAnswer.map(v => parseInt(v, 10));
     }
     correctIndices.sort((a, b) => a - b);
@@ -505,8 +507,8 @@ function submitAnswer() {
     }
     }
 
-    const correctLabels = correctIndices.map(i => OPTION_LABELS[i]).join(', ');
-    const correctTextFull = correctIndices.map(i => opts[i]).join('<br>');
+    const correctLabels = correctIndices.map(i => OPTION_LABELS[i] || '?').join(', ');
+    const correctTextFull = correctIndices.map(i => opts[i] || '').join('<br>');
 
     if (correctEl) {
       correctEl.innerHTML = ''; 
@@ -545,7 +547,7 @@ function submitAnswer() {
 
   } catch (e) {
     console.error('Submit Error:', e);
-    alert('回答処理中にエラーが発生しました。\n' + e.message);
+    alert('回答処理中にエラーが発生しました。\n詳細: ' + e.message);
   }
 }
 
@@ -619,6 +621,12 @@ function finishSession() {
 }
 
 function drawResultCharts(sourceData, chapterCanvasId, kLevelCanvasId) {
+  // ライブラリロードチェック（ここが重要）
+  if (typeof Chart === 'undefined') {
+    console.warn('Chart.js is not loaded.');
+    return;
+  }
+
   const chapterStats = {};
   const kLevelStats = {};
 
