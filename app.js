@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v11
- * 対応: ランダム出題ロジックの改善（Shuffle -> Slice）、UI文言変更対応
+ * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v12
+ * 対応: 複数条件（章・カテゴリ）の同時選択ロジック修正
  */
 
 // ====== 初期化・状態 ======
@@ -243,21 +243,37 @@ async function updateTotalCount() {
   }
 }
 
+// --- 【修正】複数条件対応の読み込みロジック ---
 async function loadQuestionsByIndex(conditions) {
   const idxChunks = await loadManifest();
   if (!idxChunks) return [];
   
   let targetChunks = idxChunks.filter(c => {
     const cond = conditions || {};
-    if (cond.chapter && c.chapter && c.chapter !== cond.chapter) return false;
-    if (cond.category && c.category && c.category !== cond.category) return false;
-    if (cond.klevel) {
-      if (c.klevel && c.klevel !== cond.klevel) return false;
+    
+    // 修正: cond.chapters (配列) に c.chapter が含まれているか確認
+    if (cond.chapters && cond.chapters.length > 0) {
+      if (!cond.chapters.includes(c.chapter)) return false;
     }
+    
+    // 修正: cond.categories (配列) に c.category が含まれているか確認
+    if (cond.categories && cond.categories.length > 0) {
+      if (!cond.categories.includes(c.category)) return false;
+    }
+    
+    // Kレベルはindex.jsonに情報がない場合が多いのでここでは弾かず、次のステップ(matchesQuestion)で厳密に判定
+    // ただし、明らかに違うと分かっている場合は弾いても良い
+    
     return true;
   });
 
-  if (targetChunks.length === 0) targetChunks = idxChunks;
+  // もしフィルタ結果が0件なら、安全策として全ロードしてからフィルタする
+  if (targetChunks.length === 0) {
+    // フィルタが厳しすぎるだけかもしれないので、全件対象にするのはリスクがあるが、
+    // UIで選択されているのにindex.jsonのメタデータ不備で弾かれるのを防ぐため、
+    // ここでは「index.jsonでヒットしなければ全件ロード」とする
+    targetChunks = idxChunks;
+  }
 
   const all = [];
   for (const c of targetChunks) {
@@ -267,29 +283,37 @@ async function loadQuestionsByIndex(conditions) {
   return all;
 }
 
+// --- 【修正】UIから配列として条件を取得 ---
 function collectFilters() {
+  // 配列として値を取得
   const chapters = Array.from(document.querySelectorAll('.chapterFilter:checked')).map(i => i.value);
   const levels   = Array.from(document.querySelectorAll('.levelFilter:checked')).map(i => i.value);
   const cats     = Array.from(document.querySelectorAll('.categoryFilter:checked')).map(i => i.value);
   return { chapters, levels, cats };
 }
 
+// --- 【修正】配列内の有無で判定 ---
 function matchesQuestion(q, cond) {
-  if (cond.chapter) {
+  // 章チェック (OR条件)
+  if (cond.chapters && cond.chapters.length > 0) {
+    // データの章が、選択された章リストに含まれているか
     const qCh = (q.chapter || '').trim();
-    const cCh = (cond.chapter || '').trim();
-    if (qCh !== cCh) return false;
+    if (!cond.chapters.some(sel => sel === qCh)) return false;
   }
-  if (cond.category) {
+
+  // カテゴリチェック (OR条件)
+  if (cond.categories && cond.categories.length > 0) {
     const qCat = (q.category || '').trim();
-    const cCat = (cond.category || '').trim();
-    if (qCat !== cCat) return false;
+    if (!cond.categories.some(sel => sel === qCat)) return false;
   }
-  if (cond.klevel) {
+
+  // レベルチェック (OR条件)
+  if (cond.klevels && cond.klevels.length > 0) {
     const qK = (q.klevel || q.level || '').trim();
-    const cK = (cond.klevel || '').trim();
-    if (qK && qK !== cK) return false;
+    // klevel未定義の問題は除外するか？ -> 今回は除外しない（または「その他」扱い）
+    if (qK && !cond.klevels.some(sel => sel === qK)) return false;
   }
+
   return true;
 }
 
@@ -466,11 +490,13 @@ function submitAnswer() {
   inputs.forEach(i => i.disabled = true);
 }
 
-// ====== 開始処理（ランダムロジック修正） ======
+// ====== 開始処理（配列条件渡し） ======
 function startWithFilters() {
   current = 0; 
   correctCount = 0; 
   tempDetails = [];
+  
+  // 修正: 配列として条件を取得
   const cond = getCurrentConditionsFromUI();
   
   loadQuestionsByIndex(cond).then(raw => {
@@ -479,14 +505,14 @@ function startWithFilters() {
       return; 
     }
     
+    // 修正: 配列対応のフィルタ関数を使用
     const filtered = raw.filter(q => matchesQuestion(q, cond));
+    
     if (!filtered.length) { 
       alert('選択された条件に合致する問題がありませんでした。'); 
       return; 
     }
 
-    // ★変更点: 全候補をシャッフルしてから、先頭N件を取る
-    // これで母集団が多い場合でも毎回違う問題が出やすくなる
     const shuffledAll = shuffleArray(filtered);
     sessionQuestions = shuffledAll.slice(0, numToAsk);
 
@@ -500,10 +526,11 @@ function startWithFilters() {
 
 function getCurrentConditionsFromUI() {
   const f = collectFilters();
+  // 修正: 配列のまま渡す
   const cond = {
-    chapter: f.chapters[0] || null,
-    category: f.cats[0] || null,
-    klevel: f.levels[0] || null,
+    chapters: f.chapters, // ['第1章', '第3章'] など
+    categories: f.cats,
+    klevels: f.levels,
   };
   const countEl = document.getElementById('numSelect'); 
   if (countEl && countEl.value) {
