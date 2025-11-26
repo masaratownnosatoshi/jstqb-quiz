@@ -1,18 +1,25 @@
 {
   "chunks": [
     {
-      "path": "questions/ch1_general.json",
-      "chapter": "第1章",
-      "category": "一般",
-      "klevel": "K2",
-      "qCount": 10
-    },
-    {
       "path": "questions/ch1_aws.json",
       "chapter": "第1章",
       "category": "AWS",
       "klevel": "K2",
       "qCount": 6
+    },
+    {
+      "path": "questions/ch1_aws_vol2.json",
+      "chapter": "第1章",
+      "category": "AWS",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch1_cloud.json",
+      "chapter": "第1章",
+      "category": "クラウド",
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch1_finance.json",
@@ -22,9 +29,23 @@
       "qCount": 6
     },
     {
-      "path": "questions/ch1_cloud.json",
+      "path": "questions/ch1_finance_vol2.json",
       "chapter": "第1章",
-      "category": "クラウド",
+      "category": "金融",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch1_general.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 10
+    },
+    {
+      "path": "questions/ch1_general_vol2.json",
+      "chapter": "第1章",
+      "category": "一般",
       "klevel": "K2",
       "qCount": 5
     },
@@ -36,23 +57,9 @@
       "qCount": 5
     },
     {
-      "path": "questions/ch2_general.json",
-      "chapter": "第2章",
-      "category": "一般",
-      "klevel": "K2",
-      "qCount": 10
-    },
-    {
       "path": "questions/ch2_aws.json",
       "chapter": "第2章",
       "category": "AWS",
-      "klevel": "K2",
-      "qCount": 5
-    },
-    {
-      "path": "questions/ch2_finance.json",
-      "chapter": "第2章",
-      "category": "金融",
       "klevel": "K2",
       "qCount": 5
     },
@@ -64,6 +71,34 @@
       "qCount": 5
     },
     {
+      "path": "questions/ch2_cloud_vol2.json",
+      "chapter": "第2章",
+      "category": "クラウド",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_finance.json",
+      "chapter": "第2章",
+      "category": "金融",
+      "klevel": "K2",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch2_general.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 10
+    },
+    {
+      "path": "questions/ch2_general_vol2.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 3
+    },
+    {
       "path": "questions/ch2_medical.json",
       "chapter": "第2章",
       "category": "医療",
@@ -71,11 +106,11 @@
       "qCount": 5
     },
     {
-      "path": "questions/ch3_general.json",
-      "chapter": "第3章",
-      "category": "一般",
+      "path": "questions/ch2_medical_vol2.json",
+      "chapter": "第2章",
+      "category": "医療",
       "klevel": "K2",
-      "qCount": 10
+      "qCount": 1
     },
     {
       "path": "questions/ch3_aws.json",
@@ -85,11 +120,11 @@
       "qCount": 5
     },
     {
-      "path": "questions/ch3_finance.json",
+      "path": "questions/ch3_aws_vol2.json",
       "chapter": "第3章",
-      "category": "金融",
+      "category": "AWS",
       "klevel": "K2",
-      "qCount": 5
+      "qCount": 1
     },
     {
       "path": "questions/ch3_cloud.json",
@@ -97,6 +132,41 @@
       "category": "クラウド",
       "klevel": "K2",
       "qCount": 5
+    },
+    {
+      "path": "questions/ch3_cloud_vol2.json",
+      "chapter": "第3章",
+      "category": "クラウド",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_finance.json",
+      "chapter": "第3章",
+      "category": "金融",
+      "klevel": "K2",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_finance_vol2.json",
+      "chapter": "第3章",
+      "category": "金融",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_general.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 10
+    },
+    {
+      "path": "questions/ch3_general_vol2.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 3
     },
     {
       "path": "questions/ch3_medical.json",

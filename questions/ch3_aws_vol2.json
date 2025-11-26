@@ -1,0 +1,21 @@
+[
+  {
+    "id": "Q3-AWS-V2-01",
+    "chapter": "第3章",
+    "level": "K2",
+    "category": "AWS",
+    "style": "用語",
+    "type": "単一選択",
+    "question": "AWS認定資格「DevOps Engineer Professional」を持つメンバーがチームにいる利点は？",
+    "options": [
+      "かっこいい",
+      "CI/CDパイプラインの構築やIaCのテスト戦略を主導できる",
+      "AWSの利用料が無料になる",
+      "開発をしなくて済む"
+    ],
+    "answer": [
+      "CI/CDパイプラインの構築やIaCのテスト戦略を主導できる"
+    ],
+    "explanation": "高度な自動化とプロセス改善をリードできるスキルセットです。"
+  }
+]
