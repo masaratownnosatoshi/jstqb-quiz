@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 テスト対策くん — 修正版v13
- * 対応: ダッシュボード集計・グラフ描画の完全実装、過去ミス表示機能
+ * JSTQB ALTM v3.0 テスト対策くん — 修正版v14
+ * 対応: ボタン無反応の修正(try-catch追加)、ダッシュボード集計の堅牢化、過去ミス表示
  */
 
 // ====== 初期化・状態 ======
@@ -10,11 +10,11 @@ let current = 0;
 let correctCount = 0;
 let isAnswerChecked = false;
 
-// チャートインスタンス保持用
+// チャート保持用
 let chartChapter = null;
 let chartKLevel = null;
-let dbChartChapter = null; // ダッシュボード用
-let dbChartKLevel = null;  // ダッシュボード用
+let dbChartChapter = null;
+let dbChartKLevel = null;
 
 let tempDetails = []; // セッション履歴
 
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     onClick('#submitBtn', submitAnswer);
     onClick('#restartBtn', restart);
     onClick('#goHomeBtn', goHome);
-    onClick('#clearDataBtn', clearLocalData); // データ削除ボタン
+    onClick('#clearDataBtn', clearLocalData);
 
     window.addEventListener('hashchange', () => {
       let route = location.hash.replace('#', '');
@@ -43,12 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const anonEl = document.getElementById('anonIdLabel');
     if (anonEl) anonEl.textContent = getActiveUserId();
     
-    // 初期ロード時にダッシュボードなら描画
     if (r === 'dashboard') renderDashboard();
 
   } catch (e) {
     console.error('Init Error:', e);
-    alert('初期化中にエラーが発生しました: ' + e.message);
+    alert('アプリの起動中にエラーが発生しました。\n' + e.message);
   }
 });
 
@@ -94,7 +93,6 @@ function getActiveUserId() {
     return inputVal;
   }
   if (stored) return stored;
-  
   const anon = createAnonId();
   localStorage.setItem('altm_active_user', anon);
   return anon;
@@ -135,57 +133,68 @@ function resolveRepoUrl(input) {
 // ====== 履歴・DB関連 ======
 function pushTempDetail(q, ok) {
   tempDetails.push({ 
-    id: q.id, 
+    id: q.id || ('unknown-' + Math.random()), 
     correct: !!ok,
     chapter: q.chapter || "未分類",
     klevel: q.klevel || q.level || "不明",
-    ts: Date.now() // タイムスタンプ追加
+    ts: Date.now()
   });
 }
 
 function getHistory(user) {
-  const key = 'altm_history_' + (user || 'guest');
-  const raw = localStorage.getItem(key);
-  return raw ? JSON.parse(raw) : [];
+  try {
+    const key = 'altm_history_' + (user || 'guest');
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error("History load error:", e);
+    return [];
+  }
 }
 
 function saveHistory(user, session) {
-  const key = 'altm_history_' + (user || 'guest');
-  const h = getHistory(user);
-  // session = { correct, total, ts, details: [...] }
-  h.unshift(session);
-  if (h.length > 100) h.length = 100; // 最新100件保持
-  localStorage.setItem(key, JSON.stringify(h));
+  try {
+    const key = 'altm_history_' + (user || 'guest');
+    const h = getHistory(user);
+    h.unshift(session);
+    if (h.length > 100) h.length = 100; 
+    localStorage.setItem(key, JSON.stringify(h));
+  } catch (e) {
+    console.error("History save error:", e);
+  }
 }
 
 function clearLocalData() {
-  if (!confirm("この端末の学習履歴をすべて削除しますか？")) return;
+  if (!confirm("学習履歴をすべて削除しますか？\n（グラフや正答率がリセットされます）")) return;
   const user = getActiveUserId();
   const key = 'altm_history_' + (user || 'guest');
   localStorage.removeItem(key);
+  
+  // チャートリセット
+  if (dbChartChapter) dbChartChapter.destroy();
+  if (dbChartKLevel) dbChartKLevel.destroy();
+  
   renderDashboard();
   alert("削除しました");
 }
 
-// ★追加: 直近で間違えた問題かチェックする関数
+// ★以前間違えた問題かチェック
 function isLastAnswerIncorrect(qId) {
+  if (!qId) return false;
   const user = getActiveUserId();
   const hist = getHistory(user);
   if (!hist || hist.length === 0) return false;
 
-  // 新しい履歴から順に検索
+  // 最新の履歴から順に検索
   for (const session of hist) {
     if (session.details && Array.isArray(session.details)) {
-      // このセッションに該当問題が含まれているか
       const detail = session.details.find(d => d.id === qId);
       if (detail) {
-        // 見つかったら、その結果が「不正解(!correct)」ならtrueを返す
-        // 「正解」ならfalseを返す（解決済みとみなす）
+        // 見つかった履歴が「不正解」ならtrue、「正解」ならfalse(解決済み)
         return !detail.correct;
       }
     }
   }
-  // 履歴に存在しない場合はfalse
   return false;
 }
 
@@ -285,7 +294,6 @@ async function updateTotalCount() {
   }
 }
 
-// 複数条件対応ロード
 async function loadQuestionsByIndex(conditions) {
   const idxChunks = await loadManifest();
   if (!idxChunks) return [];
@@ -361,18 +369,15 @@ function renderQuestions(questions) {
   if (chapterEl) chapterEl.textContent = q.chapter || '';
   if (levelEl) levelEl.textContent = q.klevel || q.level || '';
   
-  // ★修正: 「以前間違えた問題です」表示
-  // 既存のバッジがあれば削除
-  const existingBadge = document.querySelector('.retry-alert');
-  if (existingBadge) existingBadge.remove();
+  // ★「以前間違えた問題です」表示ロジック
+  // 全てのバッジを一旦消す
+  document.querySelectorAll('.retry-alert').forEach(e => e.remove());
 
-  // 直近ミスのチェック
-  if (isLastAnswerIncorrect(q.id)) {
-    // 挿入場所: chapterEl/levelEl の後、questionText の前あたり、または questionText の直前
+  if (q.id && isLastAnswerIncorrect(q.id)) {
     const badge = document.createElement('div');
     badge.className = 'retry-alert';
     badge.textContent = '以前間違えた問題です';
-    // textEl (h2) の直前に挿入
+    // 問題文の直前に挿入
     textEl.parentNode.insertBefore(badge, textEl);
   }
 
@@ -421,118 +426,123 @@ function renderQuestions(questions) {
 }
 
 function submitAnswer() {
-  const q = sessionQuestions[current];
-  if (!q) return;
+  try {
+    const q = sessionQuestions[current];
+    if (!q) return;
 
-  const feedbackEl = document.getElementById('feedback');
-  const correctEl = document.getElementById('correctAnswer');
-  const explainEl = document.getElementById('explanation');
-  const judgeEl = document.getElementById('judgeResult');
-  const submitBtn = document.getElementById('submitBtn');
-  const scoreEl = document.getElementById('score');
+    const feedbackEl = document.getElementById('feedback');
+    const correctEl = document.getElementById('correctAnswer');
+    const explainEl = document.getElementById('explanation');
+    const judgeEl = document.getElementById('judgeResult');
+    const submitBtn = document.getElementById('submitBtn');
+    const scoreEl = document.getElementById('score');
 
-  if (isAnswerChecked) {
-    if (current < sessionQuestions.length - 1) {
-      current++;
-      renderQuestions(sessionQuestions);
-    } else {
-      finishSession();
+    if (isAnswerChecked) {
+      if (current < sessionQuestions.length - 1) {
+        current++;
+        renderQuestions(sessionQuestions);
+      } else {
+        finishSession();
+      }
+      return;
     }
-    return;
-  }
 
-  const inputs = Array.from(document.querySelectorAll('input[name="answer"]'));
-  const selected = inputs.filter(i => i.checked).map(i => parseInt(i.value, 10));
-  
-  if (selected.length === 0) {
-    alert('選択肢を選んでください');
-    return;
-  }
+    const inputs = Array.from(document.querySelectorAll('input[name="answer"]'));
+    const selected = inputs.filter(i => i.checked).map(i => parseInt(i.value, 10));
+    
+    if (selected.length === 0) {
+      alert('選択肢を選んでください');
+      return;
+    }
 
-  let opts = [];
-  if (Array.isArray(q.options)) opts = q.options;
-  else if (Array.isArray(q.choices)) opts = q.choices;
+    let opts = [];
+    if (Array.isArray(q.options)) opts = q.options;
+    else if (Array.isArray(q.choices)) opts = q.choices;
 
-  let correctIndices = [];
-  let rawAnswer = [];
-  if (Array.isArray(q.answer)) rawAnswer = q.answer;
-  else rawAnswer = [q.answer];
+    let correctIndices = [];
+    let rawAnswer = [];
+    if (Array.isArray(q.answer)) rawAnswer = q.answer;
+    else rawAnswer = [q.answer];
 
-  if (rawAnswer.length > 0 && typeof rawAnswer[0] === 'string') {
-    correctIndices = rawAnswer.map(ansStr => opts.indexOf(ansStr)).filter(idx => idx !== -1);
-  } else {
-    correctIndices = rawAnswer.map(v => parseInt(v, 10));
-  }
-  correctIndices.sort((a, b) => a - b);
+    if (rawAnswer.length > 0 && typeof rawAnswer[0] === 'string') {
+      correctIndices = rawAnswer.map(ansStr => opts.indexOf(ansStr)).filter(idx => idx !== -1);
+    } else {
+      correctIndices = rawAnswer.map(v => parseInt(v, 10));
+    }
+    correctIndices.sort((a, b) => a - b);
 
-  const ok = eqSetCompat(selected, correctIndices);
-  pushTempDetail(q, ok);
-  
-  if (ok) {
-    correctCount++;
-    if (scoreEl) scoreEl.textContent = correctCount;
-  }
-  
-  if (q.chapter) {
-    const oldVal = stats.chapter.get(q.chapter) || 0;
-    stats.chapter.set(q.chapter, oldVal + (ok ? 1 : 0));
-  }
-  const lvl = q.klevel || q.level;
-  if (lvl) {
-    const oldVal = stats.klevel.get(lvl) || 0;
-    stats.klevel.set(lvl, oldVal + (ok ? 1 : 0));
-  }
-
-  if (judgeEl) {
+    const ok = eqSetCompat(selected, correctIndices);
+    pushTempDetail(q, ok);
+    
     if (ok) {
-      judgeEl.textContent = '正解！';
-      judgeEl.className = 'judge-correct'; 
-    } else {
-      judgeEl.textContent = 'ざんねん…';
-      judgeEl.className = 'judge-incorrect';
+      correctCount++;
+      if (scoreEl) scoreEl.textContent = correctCount;
     }
-  }
-
-  const correctLabels = correctIndices.map(i => OPTION_LABELS[i]).join(', ');
-  const correctTextFull = correctIndices.map(i => opts[i]).join('<br>');
-
-  if (correctEl) {
-    correctEl.innerHTML = ''; 
-    const labelSpan = document.createElement('span');
-    labelSpan.style.fontSize = '1.2em';
-    labelSpan.style.fontWeight = 'bold';
-    labelSpan.style.marginRight = '8px';
-    labelSpan.textContent = correctLabels;
-    const br = document.createElement('br');
-    const textSpan = document.createElement('span');
-    textSpan.style.fontSize = '0.9em';
-    textSpan.style.color = '#555';
-    textSpan.innerHTML = correctTextFull; 
-    correctEl.appendChild(labelSpan);
-    correctEl.appendChild(br);
-    correctEl.appendChild(textSpan);
-  }
-
-  if (explainEl) {
-    explainEl.textContent = q.explanation || '（解説データがありません）';
-  }
-  if (feedbackEl) {
-    feedbackEl.classList.remove('hidden');
-  }
-  
-  if (submitBtn) {
-    if (current < sessionQuestions.length - 1) {
-      submitBtn.textContent = '次の問題へ';
-    } else {
-      submitBtn.textContent = '結果を見る';
+    
+    if (q.chapter) {
+      const oldVal = stats.chapter.get(q.chapter) || 0;
+      stats.chapter.set(q.chapter, oldVal + (ok ? 1 : 0));
     }
-  }
+    const lvl = q.klevel || q.level;
+    if (lvl) {
+      const oldVal = stats.klevel.get(lvl) || 0;
+      stats.klevel.set(lvl, oldVal + (ok ? 1 : 0));
+    }
 
-  isAnswerChecked = true;
-  inputs.forEach(i => i.disabled = true);
+    if (judgeEl) {
+      if (ok) {
+        judgeEl.textContent = '正解！';
+        judgeEl.className = 'judge-correct'; 
+      } else {
+        judgeEl.textContent = 'ざんねん…';
+        judgeEl.className = 'judge-incorrect';
+    }
+    }
+
+    const correctLabels = correctIndices.map(i => OPTION_LABELS[i]).join(', ');
+    const correctTextFull = correctIndices.map(i => opts[i]).join('<br>');
+
+    if (correctEl) {
+      correctEl.innerHTML = ''; 
+      const labelSpan = document.createElement('span');
+      labelSpan.style.fontSize = '1.2em';
+      labelSpan.style.fontWeight = 'bold';
+      labelSpan.style.marginRight = '8px';
+      labelSpan.textContent = correctLabels;
+      const br = document.createElement('br');
+      const textSpan = document.createElement('span');
+      textSpan.style.fontSize = '0.9em';
+      textSpan.style.color = '#555';
+      textSpan.innerHTML = correctTextFull; 
+      correctEl.appendChild(labelSpan);
+      correctEl.appendChild(br);
+      correctEl.appendChild(textSpan);
+    }
+
+    if (explainEl) {
+      explainEl.textContent = q.explanation || '（解説データがありません）';
+    }
+    if (feedbackEl) {
+      feedbackEl.classList.remove('hidden');
+    }
+    
+    if (submitBtn) {
+      if (current < sessionQuestions.length - 1) {
+        submitBtn.textContent = '次の問題へ';
+      } else {
+        submitBtn.textContent = '結果を見る';
+      }
+    }
+
+    isAnswerChecked = true;
+    inputs.forEach(i => i.disabled = true);
+
+  } catch (e) {
+    console.error('Submit Error:', e);
+    alert('回答処理中にエラーが発生しました。');
+  }
 }
 
-// ====== 開始処理 ======
 function startWithFilters() {
   current = 0; 
   correctCount = 0; 
@@ -602,15 +612,11 @@ function finishSession() {
   drawResultCharts(tempDetails, 'chapterChart', 'kChart');
 }
 
-// ====== チャート描画 (共通) ======
 function drawResultCharts(sourceData, chapterCanvasId, kLevelCanvasId) {
   const chapterStats = {};
   const kLevelStats = {};
 
   sourceData.forEach(d => {
-    // 履歴データ構造(details内)も、一時データ(tempDetails)も {chapter:..., klevel:..., correct:...} を持つ前提
-    // ただし履歴データの場合は d が detail オブジェクト
-    
     const ch = d.chapter || '未分類';
     if (!chapterStats[ch]) chapterStats[ch] = { total: 0, correct: 0 };
     chapterStats[ch].total++;
@@ -652,10 +658,7 @@ function drawResultCharts(sourceData, chapterCanvasId, kLevelCanvasId) {
     });
   };
 
-  // 結果画面用かダッシュボード用かで変数管理を分けるため、ここでは戻り値を返さずグローバル変数を更新する形は取れない
-  // なので、finishSessionからは単純に呼び出し、ダッシュボードからは変数を受け取る形にするのが良いが、
-  // 簡易的に chartChapter/KLevel (結果用) と dbChartChapter/KLevel (ダッシュボード用) を使い分けるラッパーを作る
-
+  // 変数への代入を外部で行うと管理が複雑になるため、ここで分岐してグローバル変数を更新する
   if (chapterCanvasId === 'chapterChart') {
     chartChapter = draw(chapterCanvasId, chapterStats, '章別', chartChapter);
     chartKLevel = draw(kLevelCanvasId, kLevelStats, 'Kレベル別', chartKLevel);
@@ -665,12 +668,11 @@ function drawResultCharts(sourceData, chapterCanvasId, kLevelCanvasId) {
   }
 }
 
-// ====== ダッシュボード描画（修正） ======
+// ====== ダッシュボード描画 (修正: 安全策追加) ======
 function renderDashboard() {
   const user = getActiveUserId();
   const hist = getHistory(user);
   
-  // 履歴リスト表示
   const listEl = document.getElementById('historyList');
   if (listEl) {
     listEl.innerHTML = '';
@@ -682,20 +684,21 @@ function renderDashboard() {
     });
   }
 
-  // 累計データ計算
   let totalAns = 0;
   let totalCor = 0;
   let allDetails = [];
 
   hist.forEach(h => {
-    totalAns += h.total;
-    totalCor += h.correct;
+    // 数値がNaNやundefinedの場合のガード
+    const t = h.total || 0;
+    const c = h.correct || 0;
+    totalAns += t;
+    totalCor += c;
     if (h.details) {
       allDetails = allDetails.concat(h.details);
     }
   });
 
-  // 数値表示
   const elAns = document.getElementById('totalAnswered');
   const elCor = document.getElementById('totalCorrect');
   const elRate = document.getElementById('totalRate');
@@ -707,7 +710,7 @@ function renderDashboard() {
     elRate.textContent = r;
   }
 
-  // 弱点分析（正答率の低い章トップ3）
+  // 弱点分析
   const chStats = {};
   allDetails.forEach(d => {
     const ch = d.chapter || '未分類';
@@ -716,27 +719,31 @@ function renderDashboard() {
     if (d.correct) chStats[ch].c++;
   });
   
-  // 正答率計算してソート
   const weakList = Object.keys(chStats).map(k => {
     return {
       name: k,
       rate: chStats[k].t === 0 ? 0 : (chStats[k].c / chStats[k].t) * 100
     };
-  }).sort((a, b) => a.rate - b.rate); // 低い順
+  }).sort((a, b) => a.rate - b.rate);
 
   const weakEl = document.getElementById('weakAreas');
   if (weakEl) {
     weakEl.innerHTML = '';
-    weakList.slice(0, 3).forEach(w => {
-      const li = document.createElement('li');
-      li.textContent = `${w.name} (${Math.round(w.rate)}%)`;
-      weakEl.appendChild(li);
-    });
+    if (weakList.length === 0) {
+      weakEl.textContent = "データなし";
+    } else {
+      weakList.slice(0, 3).forEach(w => {
+        const li = document.createElement('li');
+        li.textContent = `${w.name} (${Math.round(w.rate)}%)`;
+        weakEl.appendChild(li);
+      });
+    }
   }
 
-  // ダッシュボード用チャート描画
-  // データがない場合はスキップ
+  // チャート描画 (データがある場合のみ)
   if (allDetails.length > 0) {
+    // 画面が切り替わった直後だとCanvas取得に失敗することがあるため、少し遅延させる手もあるが
+    // ここでは同期的に実行
     drawResultCharts(allDetails, 'chapterChartAll', 'kChartAll');
   }
 }
