@@ -1,0 +1,110 @@
+{
+  "version": "200-q-chapter-category",
+  "chunks": [
+    {
+      "id": "ch1_aws",
+      "path": "questions/ch1_aws.json",
+      "chapter": "第1章",
+      "category": "AWS",
+      "count": 14
+    },
+    {
+      "id": "ch1_cloud",
+      "path": "questions/ch1_cloud.json",
+      "chapter": "第1章",
+      "category": "クラウド",
+      "count": 13
+    },
+    {
+      "id": "ch1_general",
+      "path": "questions/ch1_general.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "count": 14
+    },
+    {
+      "id": "ch1_medical",
+      "path": "questions/ch1_medical.json",
+      "chapter": "第1章",
+      "category": "医療",
+      "count": 13
+    },
+    {
+      "id": "ch1_finance",
+      "path": "questions/ch1_finance.json",
+      "chapter": "第1章",
+      "category": "金融",
+      "count": 13
+    },
+    {
+      "id": "ch2_aws",
+      "path": "questions/ch2_aws.json",
+      "chapter": "第2章",
+      "category": "AWS",
+      "count": 13
+    },
+    {
+      "id": "ch2_cloud",
+      "path": "questions/ch2_cloud.json",
+      "chapter": "第2章",
+      "category": "クラウド",
+      "count": 13
+    },
+    {
+      "id": "ch2_general",
+      "path": "questions/ch2_general.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "count": 13
+    },
+    {
+      "id": "ch2_medical",
+      "path": "questions/ch2_medical.json",
+      "chapter": "第2章",
+      "category": "医療",
+      "count": 14
+    },
+    {
+      "id": "ch2_finance",
+      "path": "questions/ch2_finance.json",
+      "chapter": "第2章",
+      "category": "金融",
+      "count": 13
+    },
+    {
+      "id": "ch3_aws",
+      "path": "questions/ch3_aws.json",
+      "chapter": "第3章",
+      "category": "AWS",
+      "count": 13
+    },
+    {
+      "id": "ch3_cloud",
+      "path": "questions/ch3_cloud.json",
+      "chapter": "第3章",
+      "category": "クラウド",
+      "count": 14
+    },
+    {
+      "id": "ch3_general",
+      "path": "questions/ch3_general.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "count": 13
+    },
+    {
+      "id": "ch3_medical",
+      "path": "questions/ch3_medical.json",
+      "chapter": "第3章",
+      "category": "医療",
+      "count": 13
+    },
+    {
+      "id": "ch3_finance",
+      "path": "questions/ch3_finance.json",
+      "chapter": "第3章",
+      "category": "金融",
+      "count": 14
+    }
+  ]
+}

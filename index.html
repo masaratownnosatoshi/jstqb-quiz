@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JSTQB ALTM v3.0 模擬試験（拡張版）</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="app-header">
+      <h1>JSTQB ALTM v3.0 模擬試験</h1>
+      <nav class="top-nav">
+        <a href="#home" id="homeLink">ホーム</a>
+        <a href="#dashboard" id="dashboardLink">ダッシュボード</a>
+      </nav>
+    </header>
+
+    <!-- TOP（ホーム） -->
+    <section id="controls" data-route="home">
+      <p class="desc">拡張版：出題数選択／絞り込み／グラフ／履歴／弱点優先モード</p>
+      <div class="row">
+        <!-- 任意入力。未入力なら匿名IDで履歴管理 -->
+        <label>ユーザーID（任意）：<input id="userIdInput" type="text" placeholder="例）guest01 / 任意のニックネーム" /></label>
+        <label>出題数：
+          <select id="numSelect">
+            <option>10</option>
+            <option>20</option>
+            <option selected>30</option>
+            <option>40</option>
+            <option>50</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="adaptiveMode" /> 弱点優先モード</label>
+      </div>
+
+      <details class="filters">
+        <summary>絞り込み（章／Kレベル／カテゴリ）</summary>
+        <div class="row">
+          <div>
+            <b>章：</b>
+            <label><input type="checkbox" class="chapterFilter" value="第1章" checked>第1章</label>
+            <label><input type="checkbox" class="chapterFilter" value="第2章" checked>第2章</label>
+            <label><input type="checkbox" class="chapterFilter" value="第3章" checked>第3章</label>
+          </div>
+          <div>
+            <b>Kレベル：</b>
+            <label><input type="checkbox" class="levelFilter" value="K2" checked>K2</label>
+            <label><input type="checkbox" class="levelFilter" value="K3" checked>K3</label>
+            <label><input type="checkbox" class="levelFilter" value="K4" checked>K4</label>
+          </div>
+          <div>
+            <b>カテゴリ：</b>
+            <label><input type="checkbox" class="categoryFilter" value="AWS" checked>AWS</label>
+            <label><input type="checkbox" class="categoryFilter" value="クラウド" checked>クラウド</label>
+            <label><input type="checkbox" class="categoryFilter" value="医療" checked>医療</label>
+            <label><input type="checkbox" class="categoryFilter" value="一般" checked>一般</label>
+			<label><input type="checkbox" class="categoryFilter" value="金融" checked>金融</label>
+          </div>
+        </div>
+      </details>
+
+      <div class="row">
+        <button id="startBtn" type="button">この条件で開始</button>
+        <a class="secondary" href="#dashboard">過去の成績を見る（ダッシュボード）</a>
+      </div>
+    </section>
+
+    <!-- メタ情報（試験中ヘッダ相当） -->
+    <section id="meta" class="hidden" data-route="quiz">
+      <div>問題：<span id="progress">-</span></div>
+      <div>正答：<span id="score">0</span></div>
+      <button id="goHomeBtn" type="button" class="danger">TOPへ戻る</button>
+    </section>
+
+    <!-- 試験画面 -->
+    <section id="quiz" class="hidden" data-route="quiz">
+      <div id="chapter"></div>
+      <div id="level"></div>
+      <h2 id="questionText">問題を読み込み中...</h2>
+      <form id="optionsForm"></form>
+      <div id="feedback" class="hidden">
+        <p><strong>正解：</strong><span id="correctAnswer"></span></p>
+        <p><strong>解説：</strong><span id="explanation"></span></p>
+      </div>
+      <div class="nav">
+        <button id="prevBtn" type="button">前へ</button>
+        <button id="submitBtn" type="button">回答する</button>
+        <button id="nextBtn" type="button">次へ</button>
+      </div>
+    </section>
+
+    <!-- 結果 -->
+    <section id="results" class="hidden" data-route="results">
+      <h2>結果</h2>
+      <p>正答数：<span id="finalCorrect"></span> / <span id="totalQuestions"></span></p>
+      <p>正答率：<span id="finalRate"></span>%</p>
+
+      <h3>章別正答率</h3>
+      <canvas id="chapterChart" width="600" height="280"></canvas>
+
+      <h3>Kレベル別正答率</h3>
+      <canvas id="kChart" width="600" height="280"></canvas>
+
+      <details>
+        <summary>あなたの履歴（最新10件）</summary>
+        <ul id="historyList"></ul>
+      </details>
+
+      <div class="row">
+        <button id="restartBtn" type="button">条件を変えてやり直す</button>
+        <a class="secondary" href="#dashboard">ダッシュボードへ</a>
+      </div>
+    </section>
+
+    <!-- ダッシュボード -->
+    <section id="dashboard" class="hidden" data-route="dashboard">
+      <h2>ダッシュボード</h2>
+      <p>匿名ID：<span id="anonIdLabel"></span></p>
+      <div class="cards">
+        <div class="card">
+          <h3>累計成績</h3>
+          <p>総回答数：<span id="totalAnswered"></span></p>
+          <p>総正答数：<span id="totalCorrect"></span></p>
+          <p>累計正答率：<span id="totalRate"></span>%</p>
+        </div>
+        <div class="card">
+          <h3>弱点（正答率の低い領域）</h3>
+          <ul id="weakAreas"></ul>
+        </div>
+      </div>
+
+      <h3>章別正答率（累計）</h3>
+      <canvas id="chapterChartAll" width="600" height="280"></canvas>
+
+      <h3>Kレベル別正答率（累計）</h3>
+      <canvas id="kChartAll" width="600" height="280"></canvas>
+
+      <div class="row">
+        <button id="clearDataBtn" class="danger" type="button">この端末のデータを削除</button>
+        <a class="secondary" href="#home">TOPへ戻る</a>
+      </div>
+    </section>
+
+    <footer>
+      <small>© 2025 JSTQB ALTM v3.0 Practice — 拡張版</small>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
