@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v7
- * 対応: 途切れ防止、デバッグ機能、フィルタリング強化
+ * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v8
+ * 対応: 選択肢のチェックボックス/ラジオボタンを表示させる
  */
 
 // ====== 初期化・状態 ======
@@ -265,8 +265,6 @@ async function loadQuestionsByIndex(conditions) {
 
     // レベルのチェック (揺らぎ対応)
     if (cond.klevel) {
-      // index.jsonにklevelが無い場合はパスさせるか、厳密にするか
-      // ここでは「情報があればチェックする」方針
       if (c.klevel && c.klevel !== cond.klevel) return false;
     }
     return true;
@@ -312,7 +310,7 @@ function matchesQuestion(q, cond) {
   if (cond.klevel) {
     const qK = (q.klevel || q.level || '').trim();
     const cK = (cond.klevel || '').trim();
-    // 問題側にレベル設定がない場合は除外しない（あるいは厳密にするなら return false）
+    // 問題側にレベル設定がない場合は除外しない
     if (qK && qK !== cK) return false;
   }
 
@@ -348,11 +346,11 @@ function renderQuestions(questions) {
   if (chapterEl) chapterEl.textContent = q.chapter || '';
   if (levelEl) levelEl.textContent = q.klevel || q.level || '';
   
-  // 問題文表示
+  // 問題文表示 (改行対応)
   const qText = q.question || q.text || q.title || '(問題文)';
   if (textEl) textEl.textContent = qText;
 
-  // 選択肢生成 (ABC対応)
+  // 選択肢生成 (ABC + チェックボックス表示対応)
   if (choicesEl) {
     choicesEl.innerHTML = '';
     
@@ -371,12 +369,16 @@ function renderQuestions(questions) {
       label.style.alignItems = 'center'; 
       label.style.cursor = 'pointer';
 
-      // 隠しラジオ/チェックボックス
+      // ★ここが修正点: ラジオ/チェックボックスを表示させる
       const input = document.createElement('input');
       input.type = isMulti ? 'checkbox' : 'radio';
       input.name = 'answer';
       input.value = String(i);
-      input.style.display = 'none';
+      
+      // 見やすくするために少し余白を入れ、大きさを調整
+      input.style.marginRight = '8px';
+      input.style.transform = 'scale(1.2)';
+      // display: none を削除したので表示されます
 
       // ABCタグ
       const tagSpan = document.createElement('span');
