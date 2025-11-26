@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v10
- * 対応: 完全ランダム出題（シャッフル実装）、結果グラフの描画復活
+ * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v11
+ * 対応: ランダム出題ロジックの改善（Shuffle -> Slice）、UI文言変更対応
  */
 
 // ====== 初期化・状態 ======
@@ -10,24 +10,17 @@ let current = 0;
 let correctCount = 0;
 let isAnswerChecked = false;
 
-// チャートのインスタンス保持用（再描画時に破棄するため）
 let chartChapter = null;
 let chartKLevel = null;
-
-// セッション履歴
 let tempDetails = [];          
 
-// ABCラベル用の配列
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
 document.addEventListener('DOMContentLoaded', () => {
   try {
-    // 初期ロード
     let r = location.hash.replace('#', '');
     if (!r) r = 'home';
     showRoute(r);
-
-    // 問題数集計表示
     updateTotalCount();
 
     onClick('#startBtn', startWithFilters);   
@@ -92,7 +85,6 @@ function getActiveUserId() {
     return inputVal;
   }
   if (stored) return stored;
-  
   const anon = createAnonId();
   localStorage.setItem('altm_active_user', anon);
   return anon;
@@ -109,28 +101,14 @@ function eqSetCompat(selectedArr, answerValue) {
   return true;
 }
 
-// 【修正点】配列を完全にシャッフルする関数（フィッシャー–イェーツ法）
+// シャッフル関数
 function shuffleArray(array) {
-  const res = array.slice(); // コピーを作成
+  const res = array.slice();
   for (let i = res.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [res[i], res[j]] = [res[j], res[i]];
   }
   return res;
-}
-
-// レザボアサンプリング（抽出用）
-function reservoirSample(arr, k) {
-  const res = [];
-  for (let i = 0; i < arr.length; i++) {
-    if (i < k) {
-      res[i] = arr[i];
-    } else {
-      const j = Math.floor(Math.random() * (i + 1));
-      if (j < k) res[j] = arr[i];
-    }
-  }
-  return res.slice(0, Math.min(k, arr.length));
 }
 
 function resolveRepoUrl(input) {
@@ -147,7 +125,6 @@ function resolveRepoUrl(input) {
 
 // ====== 履歴・DB関連 ======
 function pushTempDetail(q, ok) {
-  // チャート集計用に、問題のメタデータ（章、レベル）も含めて保存
   tempDetails.push({ 
     id: q.id, 
     correct: !!ok,
@@ -170,7 +147,7 @@ function saveHistory(user, session) {
   localStorage.setItem(key, JSON.stringify(h));
 }
 
-// IndexedDB設定
+// IndexedDB
 const DB_NAME = 'ALTM_DB';
 const DB_VERSION = 2;
 let _db;
@@ -180,17 +157,10 @@ function openDb() {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
-      if (!db.objectStoreNames.contains('questionChunks')) {
-        db.createObjectStore('questionChunks');
-      }
-      if (!db.objectStoreNames.contains('manifest')) {
-        db.createObjectStore('manifest');
-      }
+      if (!db.objectStoreNames.contains('questionChunks')) db.createObjectStore('questionChunks');
+      if (!db.objectStoreNames.contains('manifest')) db.createObjectStore('manifest');
     };
-    req.onsuccess = () => {
-      _db = req.result;
-      resolve(_db);
-    };
+    req.onsuccess = () => { _db = req.result; resolve(_db); };
     req.onerror = () => reject(req.error);
   });
 }
@@ -235,13 +205,9 @@ async function fetchJSON(inputUrl) {
 async function loadManifest() {
   const result = await fetchJSON('questions/index.json');
   if (!result.ok) return null;
-
   let chunks = [];
-  if (result.json && Array.isArray(result.json.chunks)) {
-    chunks = result.json.chunks;
-  } else if (Array.isArray(result.json)) {
-    chunks = result.json;
-  }
+  if (result.json && Array.isArray(result.json.chunks)) chunks = result.json.chunks;
+  else if (Array.isArray(result.json)) chunks = result.json;
   await idbPut('manifest', 'index', { chunks: chunks });
   return chunks;
 }
@@ -255,23 +221,17 @@ async function loadChunk(path) {
   }
   const result = await fetchJSON(path);
   if (!result.ok) return [];
-
   let arr = [];
-  if (Array.isArray(result.json)) {
-    arr = result.json;
-  } else if (result.json && Array.isArray(result.json.questions)) {
-    arr = result.json.questions;
-  }
+  if (Array.isArray(result.json)) arr = result.json;
+  else if (result.json && Array.isArray(result.json.questions)) arr = result.json.questions;
   await idbPut('questionChunks', path, result.json);
   return arr;
 }
 
-// ====== 問題数集計表示 ======
 async function updateTotalCount() {
   try {
     const chunks = await loadManifest();
     const countEl = document.getElementById('totalCount');
-    
     if (!chunks || !Array.isArray(chunks)) {
       if(countEl) countEl.textContent = "-";
       return;
@@ -297,16 +257,12 @@ async function loadQuestionsByIndex(conditions) {
     return true;
   });
 
-  if (targetChunks.length === 0) {
-    targetChunks = idxChunks;
-  }
+  if (targetChunks.length === 0) targetChunks = idxChunks;
 
   const all = [];
   for (const c of targetChunks) {
     const part = await loadChunk(c.path);
-    if (Array.isArray(part)) {
-      all.push(...part);
-    }
+    if (Array.isArray(part)) all.push(...part);
   }
   return all;
 }
@@ -378,7 +334,6 @@ function renderQuestions(questions) {
     opts.forEach((optText, i) => {
       const div = document.createElement('div');
       div.style.padding = '8px 0';
-      
       const label = document.createElement('label');
       label.style.display = 'flex';
       label.style.alignItems = 'center'; 
@@ -409,7 +364,6 @@ function renderQuestions(questions) {
   }
 }
 
-// ====== 回答ロジック ======
 function submitAnswer() {
   const q = sessionQuestions[current];
   if (!q) return;
@@ -456,8 +410,6 @@ function submitAnswer() {
   correctIndices.sort((a, b) => a - b);
 
   const ok = eqSetCompat(selected, correctIndices);
-  
-  // 詳細情報を履歴保存用にプッシュ
   pushTempDetail(q, ok);
   
   if (ok) {
@@ -514,11 +466,11 @@ function submitAnswer() {
   inputs.forEach(i => i.disabled = true);
 }
 
-// ====== 開始処理 ======
+// ====== 開始処理（ランダムロジック修正） ======
 function startWithFilters() {
   current = 0; 
   correctCount = 0; 
-  tempDetails = []; // リセット
+  tempDetails = [];
   const cond = getCurrentConditionsFromUI();
   
   loadQuestionsByIndex(cond).then(raw => {
@@ -533,9 +485,10 @@ function startWithFilters() {
       return; 
     }
 
-    // 【修正点】選んだ後にシャッフル（並び順ランダム化）
-    const sampled = reservoirSample(filtered, numToAsk);
-    sessionQuestions = shuffleArray(sampled);
+    // ★変更点: 全候補をシャッフルしてから、先頭N件を取る
+    // これで母集団が多い場合でも毎回違う問題が出やすくなる
+    const shuffledAll = shuffleArray(filtered);
+    sessionQuestions = shuffledAll.slice(0, numToAsk);
 
     showRoute('quiz');
     renderQuestions(sessionQuestions);
@@ -559,7 +512,6 @@ function getCurrentConditionsFromUI() {
   return cond;
 }
 
-// ====== 終了処理・グラフ描画 ======
 function finishSession() {
   const user = getActiveUserId();
   saveHistory(user, { 
@@ -582,40 +534,29 @@ function finishSession() {
     finalRate.textContent = rate;
   }
   
-  // ダッシュボード（履歴）更新
   renderDashboard();
-  
-  // 【追加】今回のセッションのグラフを描画
   drawResultCharts();
 }
 
-// ====== チャート描画ロジック ======
 function drawResultCharts() {
-  // 集計用オブジェクト
   const chapterStats = {};
   const kLevelStats = {};
 
-  // tempDetails から集計
   tempDetails.forEach(d => {
-    // 章の集計
     const ch = d.chapter || '未分類';
     if (!chapterStats[ch]) chapterStats[ch] = { total: 0, correct: 0 };
     chapterStats[ch].total++;
     if (d.correct) chapterStats[ch].correct++;
 
-    // Kレベルの集計
     const lvl = d.klevel || '不明';
     if (!kLevelStats[lvl]) kLevelStats[lvl] = { total: 0, correct: 0 };
     kLevelStats[lvl].total++;
     if (d.correct) kLevelStats[lvl].correct++;
   });
 
-  // チャート描画関数
   const draw = (canvasId, statsObj, labelText, instanceVar) => {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return null;
-
-    // 既存のチャートがあれば破棄
     if (instanceVar) instanceVar.destroy();
 
     const labels = Object.keys(statsObj);
@@ -637,17 +578,13 @@ function drawResultCharts() {
         }]
       },
       options: {
-        scales: {
-          y: { beginAtZero: true, max: 100 }
-        },
+        scales: { y: { beginAtZero: true, max: 100 } },
         responsive: true
       }
     });
   };
 
-  // 章別チャート
   chartChapter = draw('chapterChart', chapterStats, '章別', chartChapter);
-  // Kレベルチャート
   chartKLevel = draw('kChart', kLevelStats, 'Kレベル別', chartKLevel);
 }
 
@@ -664,8 +601,6 @@ function renderDashboard() {
     li.textContent = (idx + 1) + '. 正答 ' + h.correct + '/' + h.total + ' - ' + dateStr;
     listEl.appendChild(li);
   });
-  
-  // ダッシュボード側にも累積グラフを出すならここに追記可能（今回は結果画面優先）
 }
 
 function restart() { 

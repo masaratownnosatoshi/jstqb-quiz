@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>JSTQB ALTM v3.0 模擬試験（拡張版）</title>
+  <title>JSTQB ALTM v3.0 テスト対策くん</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <main class="container">
     <header class="app-header">
-      <h1>JSTQB ALTM v3.0 模擬試験</h1>
+      <h1>JSTQB ALTM v3.0 テスト対策くん</h1>
       <nav class="top-nav">
         <a href="#home" id="homeLink">ホーム</a>
         <a href="#dashboard" id="dashboardLink">ダッシュボード</a>
@@ -17,7 +17,6 @@
     </header>
 
     <section id="controls" data-route="home">
-      <p class="desc">拡張版：出題数選択／絞り込み／グラフ／履歴／弱点優先モード</p>
       
       <div style="background:#eef2f7; padding:12px; border-radius:8px; margin-bottom:20px; text-align:center; color:#2b5797; border: 1px solid #dbe4ef;">
         現在の収録問題数：<strong id="totalCount" style="font-size:1.6em; margin:0 4px;">-</strong> 問
@@ -34,7 +33,7 @@
             <option>50</option>
           </select>
         </label>
-        <label><input type="checkbox" id="adaptiveMode" /> 弱点優先モード</label>
+        <label><input type="checkbox" id="adaptiveMode" /> 苦手な箇所を優先</label>
       </div>
 
       <details class="filters">
@@ -80,7 +79,6 @@
       <div id="level"></div>
       
       <h2 id="questionText">問題を読み込み中...</h2>
-      
       <form id="choices"></form>
       
       <div id="feedback" class="hidden">
