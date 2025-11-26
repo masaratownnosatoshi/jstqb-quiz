@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 テスト対策くん — 修正版v17
- * 対応: stats is not defined エラーの修正（不要な集計ロジックの削除）
+ * JSTQB ALTM v3.0 テスト対策くん — 修正版v18
+ * 対応: 選択肢の並び順をランダム化（正解データの追従対応）
  */
 
 // ====== 初期化・状態 ======
@@ -99,7 +99,6 @@ function getActiveUserId() {
   return anon;
 }
 
-// 集合比較（安全版）
 function eqSetCompat(selectedArr, correctArr) {
   if (!Array.isArray(selectedArr) || !Array.isArray(correctArr)) return false;
   if (selectedArr.length !== correctArr.length) return false;
@@ -112,6 +111,7 @@ function eqSetCompat(selectedArr, correctArr) {
   return true;
 }
 
+// 配列シャッフル
 function shuffleArray(array) {
   const res = array.slice();
   for (let i = res.length - 1; i > 0; i--) {
@@ -119,6 +119,53 @@ function shuffleArray(array) {
     [res[i], res[j]] = [res[j], res[i]];
   }
   return res;
+}
+
+// ★追加: 問題の選択肢をランダム化し、正解インデックスを再計算して返す
+function randomizeQuestionOptions(q) {
+  // 元の選択肢配列を取得
+  const originalOpts = q.options || q.choices || [];
+  if (originalOpts.length === 0) return q;
+
+  // 正解データを「元の選択肢のインデックス」のSetに変換
+  let correctOriginalIndices = new Set();
+  let rawAns = Array.isArray(q.answer) ? q.answer : (q.answer !== undefined ? [q.answer] : []);
+
+  if (rawAns.length > 0 && typeof rawAns[0] === 'string') {
+    // 文字列指定の場合、元の選択肢からインデックスを探す
+    rawAns.forEach(ansStr => {
+      const idx = originalOpts.findIndex(o => String(o).trim() === String(ansStr).trim());
+      if (idx !== -1) correctOriginalIndices.add(idx);
+    });
+  } else {
+    // 数値指定の場合
+    rawAns.forEach(idx => correctOriginalIndices.add(parseInt(idx, 10)));
+  }
+
+  // シャッフル用のペア配列作成 [{text: "選択肢文言", isCorrect: true/false}, ...]
+  let items = originalOpts.map((text, index) => ({
+    text: text,
+    isCorrect: correctOriginalIndices.has(index)
+  }));
+
+  // シャッフル
+  items = shuffleArray(items);
+
+  // 新しい質問オブジェクトを作成（元のqを汚染しないようコピー）
+  let newQ = { ...q };
+  
+  // optionsをシャッフル後のテキスト配列に更新
+  newQ.options = items.map(i => i.text);
+  // choicesプロパティがあれば削除（混乱防止）
+  if (newQ.choices) delete newQ.choices;
+
+  // answerを「新しい配列内でのインデックス」に更新
+  // (isCorrectがtrueのもののインデックスを集める)
+  newQ.answer = items
+    .map((item, index) => item.isCorrect ? index : -1)
+    .filter(idx => idx !== -1);
+
+  return newQ;
 }
 
 function resolveRepoUrl(input) {
@@ -452,27 +499,24 @@ function submitAnswer() {
       return;
     }
 
+    // 表示されている選択肢（opts）はシャッフル後のもの
     let opts = [];
     if (Array.isArray(q.options)) opts = q.options;
     else if (Array.isArray(q.choices)) opts = q.choices;
 
+    // q.answer は randomizeQuestionOptions ですでに
+    // 「シャッフル後の配列における正解インデックス」に変換済み。
+    // なので、単純に比較するだけでOK。
+    
     let correctIndices = [];
-    let rawAnswer = [];
-    if (Array.isArray(q.answer)) rawAnswer = q.answer;
-    else if (q.answer !== undefined) rawAnswer = [q.answer];
-
-    if (rawAnswer.length > 0 && typeof rawAnswer[0] === 'string') {
-      correctIndices = rawAnswer.map(ansStr => {
-        return opts.findIndex(opt => String(opt).trim() === String(ansStr).trim());
-      }).filter(idx => idx !== -1);
-    } else {
-      correctIndices = rawAnswer.map(v => parseInt(v, 10));
+    if (Array.isArray(q.answer)) {
+      correctIndices = q.answer.map(v => parseInt(v, 10));
+    } else if (q.answer !== undefined) {
+      correctIndices = [parseInt(q.answer, 10)];
     }
     correctIndices.sort((a, b) => a - b);
 
     const ok = eqSetCompat(selected, correctIndices);
-    
-    // 詳細履歴に追加
     pushTempDetail(q, ok);
     
     if (ok) {
@@ -480,8 +524,7 @@ function submitAnswer() {
       if (scoreEl) scoreEl.textContent = correctCount;
     }
     
-    // ★修正: ここにあった stats.chapter... の更新処理を削除しました
-    // stats変数は廃止済みのため、ここがエラー原因でした
+    // stats変数は廃止済みのため更新処理はなし（履歴から集計）
 
     if (judgeEl) {
       if (ok) {
@@ -493,6 +536,7 @@ function submitAnswer() {
     }
     }
 
+    // 正解ラベル(A, B...)とテキストを表示
     const correctLabels = correctIndices.map(i => OPTION_LABELS[i] || '?').join(', ');
     const correctTextFull = correctIndices.map(i => opts[i] || '').join('<br>');
 
@@ -555,8 +599,12 @@ function startWithFilters() {
       return; 
     }
 
+    // 1. まず問題をシャッフルして抽出
     const shuffledAll = shuffleArray(filtered);
-    sessionQuestions = shuffledAll.slice(0, numToAsk);
+    const sampled = shuffledAll.slice(0, numToAsk);
+
+    // 2. ★修正: 各問題の「選択肢」もシャッフル
+    sessionQuestions = sampled.map(q => randomizeQuestionOptions(q));
 
     showRoute('quiz');
     renderQuestions(sessionQuestions);
