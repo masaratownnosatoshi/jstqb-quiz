@@ -18,6 +18,11 @@
 
     <section id="controls" data-route="home">
       <p class="desc">拡張版：出題数選択／絞り込み／グラフ／履歴／弱点優先モード</p>
+      
+      <div style="background:#eef2f7; padding:12px; border-radius:8px; margin-bottom:20px; text-align:center; color:#2b5797; border: 1px solid #dbe4ef;">
+        現在の収録問題数：<strong id="totalCount" style="font-size:1.6em; margin:0 4px;">-</strong> 問
+      </div>
+
       <div class="row">
         <label>ユーザーID（任意）：<input id="userIdInput" type="text" placeholder="例）guest01 / 任意のニックネーム" /></label>
         <label>出題数：
@@ -79,7 +84,8 @@
       <form id="choices"></form>
       
       <div id="feedback" class="hidden">
-        <h3 id="judgeResult"></h3> <p><strong>正解：</strong><span id="correctAnswer"></span></p>
+        <h3 id="judgeResult"></h3>
+        <p><strong>正解：</strong><span id="correctAnswer"></span></p>
         <p><strong>解説：</strong><span id="explanation"></span></p>
       </div>
 

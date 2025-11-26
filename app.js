@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v8
- * 対応: 選択肢のチェックボックス/ラジオボタンを表示させる
+ * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v9
+ * 対応: ホーム画面への合計問題数表示機能追加
  */
 
 // ====== 初期化・状態 ======
@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let r = location.hash.replace('#', '');
     if (!r) r = 'home';
     showRoute(r);
+
+    // ★追加: 問題数集計表示
+    updateTotalCount();
 
     onClick('#startBtn', startWithFilters);   
     onClick('#submitBtn', submitAnswer);
@@ -212,10 +215,10 @@ async function fetchJSON(inputUrl) {
 }
 
 async function loadManifest() {
-  const cached = await idbGet('manifest', 'index');
-  if (cached && cached.chunks && Array.isArray(cached.chunks)) {
-    return cached.chunks;
-  }
+  // キャッシュを使わず常に最新を取りに行く(更新頻度が高いため)
+  // const cached = await idbGet('manifest', 'index');
+  // if (cached && cached.chunks && Array.isArray(cached.chunks)) return cached.chunks;
+
   const result = await fetchJSON('questions/index.json');
   if (!result.ok) return null;
 
@@ -249,21 +252,40 @@ async function loadChunk(path) {
   return arr;
 }
 
+// ====== 追加機能: 問題数集計 ======
+async function updateTotalCount() {
+  try {
+    const chunks = await loadManifest();
+    const countEl = document.getElementById('totalCount');
+    
+    if (!chunks || !Array.isArray(chunks)) {
+      if(countEl) countEl.textContent = "-";
+      return;
+    }
+
+    // index.json に qCount があればそれを合計
+    // 無ければ 0 (Pythonスクリプト未実行)
+    const total = chunks.reduce((sum, chunk) => sum + (chunk.qCount || 0), 0);
+
+    if (countEl) {
+      countEl.textContent = total;
+      if (total === 0) {
+        console.warn('問題数が0です。generate_data.pyを実行してindex.jsonを更新してください。');
+      }
+    }
+  } catch (e) {
+    console.error('Counts error:', e);
+  }
+}
+
 async function loadQuestionsByIndex(conditions) {
   const idxChunks = await loadManifest();
   if (!idxChunks) return [];
   
-  // マニフェスト段階でのフィルタリング
   let targetChunks = idxChunks.filter(c => {
     const cond = conditions || {};
-    
-    // 章のチェック
     if (cond.chapter && c.chapter && c.chapter !== cond.chapter) return false;
-    
-    // カテゴリのチェック
     if (cond.category && c.category && c.category !== cond.category) return false;
-
-    // レベルのチェック (揺らぎ対応)
     if (cond.klevel) {
       if (c.klevel && c.klevel !== cond.klevel) return false;
     }
@@ -292,28 +314,21 @@ function collectFilters() {
 }
 
 function matchesQuestion(q, cond) {
-  // 章の判定
   if (cond.chapter) {
     const qCh = (q.chapter || '').trim();
     const cCh = (cond.chapter || '').trim();
     if (qCh !== cCh) return false;
   }
-
-  // カテゴリの判定
   if (cond.category) {
     const qCat = (q.category || '').trim();
     const cCat = (cond.category || '').trim();
     if (qCat !== cCat) return false;
   }
-
-  // Kレベルの判定 (klevel または level の揺らぎ対応)
   if (cond.klevel) {
     const qK = (q.klevel || q.level || '').trim();
     const cK = (cond.klevel || '').trim();
-    // 問題側にレベル設定がない場合は除外しない
     if (qK && qK !== cK) return false;
   }
-
   return true;
 }
 
@@ -329,11 +344,10 @@ function renderQuestions(questions) {
   const levelEl = document.getElementById('level');
 
   if (!q) {
-    alert('問題データが正しく読み込めませんでした。');
+    alert('問題データがありません。');
     return;
   }
   
-  // リセット
   isAnswerChecked = false;
   if (feedbackEl) feedbackEl.classList.add('hidden');
   if (submitBtn) {
@@ -341,19 +355,15 @@ function renderQuestions(questions) {
     submitBtn.disabled = false;
   }
 
-  // メタ情報表示
   if (idxEl) idxEl.textContent = (current + 1) + ' / ' + questions.length;
   if (chapterEl) chapterEl.textContent = q.chapter || '';
   if (levelEl) levelEl.textContent = q.klevel || q.level || '';
   
-  // 問題文表示 (改行対応)
   const qText = q.question || q.text || q.title || '(問題文)';
   if (textEl) textEl.textContent = qText;
 
-  // 選択肢生成 (ABC + チェックボックス表示対応)
   if (choicesEl) {
     choicesEl.innerHTML = '';
-    
     let opts = [];
     if (Array.isArray(q.options)) opts = q.options;
     else if (Array.isArray(q.choices)) opts = q.choices;
@@ -369,23 +379,17 @@ function renderQuestions(questions) {
       label.style.alignItems = 'center'; 
       label.style.cursor = 'pointer';
 
-      // ★ここが修正点: ラジオ/チェックボックスを表示させる
       const input = document.createElement('input');
       input.type = isMulti ? 'checkbox' : 'radio';
       input.name = 'answer';
       input.value = String(i);
-      
-      // 見やすくするために少し余白を入れ、大きさを調整
       input.style.marginRight = '8px';
-      input.style.transform = 'scale(1.2)';
-      // display: none を削除したので表示されます
+      input.style.transform = 'scale(1.2)'; 
 
-      // ABCタグ
       const tagSpan = document.createElement('span');
       tagSpan.className = 'option-tag';
       tagSpan.textContent = OPTION_LABELS[i] || '?';
 
-      // 選択肢テキスト
       const textSpan = document.createElement('span');
       textSpan.className = 'option-content';
       textSpan.textContent = optText;
@@ -412,7 +416,6 @@ function submitAnswer() {
   const submitBtn = document.getElementById('submitBtn');
   const scoreEl = document.getElementById('score');
 
-  // 解説表示中なら「次へ」
   if (isAnswerChecked) {
     if (current < sessionQuestions.length - 1) {
       current++;
@@ -423,7 +426,6 @@ function submitAnswer() {
     return;
   }
 
-  // 選択チェック
   const inputs = Array.from(document.querySelectorAll('input[name="answer"]'));
   const selected = inputs.filter(i => i.checked).map(i => parseInt(i.value, 10));
   
@@ -432,7 +434,6 @@ function submitAnswer() {
     return;
   }
 
-  // 正解インデックス計算
   let opts = [];
   if (Array.isArray(q.options)) opts = q.options;
   else if (Array.isArray(q.choices)) opts = q.choices;
@@ -442,7 +443,6 @@ function submitAnswer() {
   if (Array.isArray(q.answer)) rawAnswer = q.answer;
   else rawAnswer = [q.answer];
 
-  // 正解が文字列(文章)ならインデックスに変換
   if (rawAnswer.length > 0 && typeof rawAnswer[0] === 'string') {
     correctIndices = rawAnswer.map(ansStr => opts.indexOf(ansStr)).filter(idx => idx !== -1);
   } else {
@@ -450,7 +450,6 @@ function submitAnswer() {
   }
   correctIndices.sort((a, b) => a - b);
 
-  // 判定
   const ok = eqSetCompat(selected, correctIndices);
   pushTempDetail(q.id || current, ok);
   
@@ -459,7 +458,6 @@ function submitAnswer() {
     if (scoreEl) scoreEl.textContent = correctCount;
   }
   
-  // 集計
   if (q.chapter) {
     const oldVal = stats.chapter.get(q.chapter) || 0;
     stats.chapter.set(q.chapter, oldVal + (ok ? 1 : 0));
@@ -470,7 +468,6 @@ function submitAnswer() {
     stats.klevel.set(lvl, oldVal + (ok ? 1 : 0));
   }
 
-  // --- 結果表示 ---
   if (judgeEl) {
     if (ok) {
       judgeEl.textContent = '正解！';
@@ -481,29 +478,21 @@ function submitAnswer() {
     }
   }
 
-  // 正解の「記号(A,B...)」と「文章」を表示
   const correctLabels = correctIndices.map(i => OPTION_LABELS[i]).join(', ');
   const correctTextFull = correctIndices.map(i => opts[i]).join('<br>');
 
   if (correctEl) {
     correctEl.innerHTML = ''; 
-
-    // 1. 記号部分
     const labelSpan = document.createElement('span');
     labelSpan.style.fontSize = '1.2em';
     labelSpan.style.fontWeight = 'bold';
     labelSpan.style.marginRight = '8px';
     labelSpan.textContent = correctLabels;
-    
-    // 2. 改行
     const br = document.createElement('br');
-
-    // 3. 正解の文章
     const textSpan = document.createElement('span');
     textSpan.style.fontSize = '0.9em';
     textSpan.style.color = '#555';
     textSpan.innerHTML = correctTextFull; 
-
     correctEl.appendChild(labelSpan);
     correctEl.appendChild(br);
     correctEl.appendChild(textSpan);
@@ -537,7 +526,7 @@ function startWithFilters() {
   
   loadQuestionsByIndex(cond).then(raw => {
     if (!raw || !raw.length) { 
-      alert('条件に合う問題が見つかりませんでした。\n(index.jsonの読み込みに失敗しているか、条件が厳しすぎます)'); 
+      alert('条件に合う問題が見つかりませんでした。\n(generate_data.py を実行してデータを更新してください)'); 
       return; 
     }
     
