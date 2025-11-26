@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v9
- * 対応: ホーム画面への合計問題数表示機能追加
+ * JSTQB ALTM v3.0 模擬試験（拡張版） — 修正版v10
+ * 対応: 完全ランダム出題（シャッフル実装）、結果グラフの描画復活
  */
 
 // ====== 初期化・状態 ======
@@ -10,10 +10,11 @@ let current = 0;
 let correctCount = 0;
 let isAnswerChecked = false;
 
-const stats = { chapter: new Map(), klevel: new Map() }; 
-let userName = '';             
-let adaptiveMode = false;      
-let numToAsk = 30;             
+// チャートのインスタンス保持用（再描画時に破棄するため）
+let chartChapter = null;
+let chartKLevel = null;
+
+// セッション履歴
 let tempDetails = [];          
 
 // ABCラベル用の配列
@@ -26,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!r) r = 'home';
     showRoute(r);
 
-    // ★追加: 問題数集計表示
+    // 問題数集計表示
     updateTotalCount();
 
     onClick('#startBtn', startWithFilters);   
@@ -108,6 +109,17 @@ function eqSetCompat(selectedArr, answerValue) {
   return true;
 }
 
+// 【修正点】配列を完全にシャッフルする関数（フィッシャー–イェーツ法）
+function shuffleArray(array) {
+  const res = array.slice(); // コピーを作成
+  for (let i = res.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [res[i], res[j]] = [res[j], res[i]];
+  }
+  return res;
+}
+
+// レザボアサンプリング（抽出用）
 function reservoirSample(arr, k) {
   const res = [];
   for (let i = 0; i < arr.length; i++) {
@@ -134,8 +146,14 @@ function resolveRepoUrl(input) {
 }
 
 // ====== 履歴・DB関連 ======
-function pushTempDetail(qid, ok) {
-  tempDetails.push({ id: qid, correct: !!ok });
+function pushTempDetail(q, ok) {
+  // チャート集計用に、問題のメタデータ（章、レベル）も含めて保存
+  tempDetails.push({ 
+    id: q.id, 
+    correct: !!ok,
+    chapter: q.chapter || "未分類",
+    klevel: q.klevel || q.level || "不明"
+  });
 }
 
 function getHistory(user) {
@@ -215,10 +233,6 @@ async function fetchJSON(inputUrl) {
 }
 
 async function loadManifest() {
-  // キャッシュを使わず常に最新を取りに行く(更新頻度が高いため)
-  // const cached = await idbGet('manifest', 'index');
-  // if (cached && cached.chunks && Array.isArray(cached.chunks)) return cached.chunks;
-
   const result = await fetchJSON('questions/index.json');
   if (!result.ok) return null;
 
@@ -252,7 +266,7 @@ async function loadChunk(path) {
   return arr;
 }
 
-// ====== 追加機能: 問題数集計 ======
+// ====== 問題数集計表示 ======
 async function updateTotalCount() {
   try {
     const chunks = await loadManifest();
@@ -262,17 +276,8 @@ async function updateTotalCount() {
       if(countEl) countEl.textContent = "-";
       return;
     }
-
-    // index.json に qCount があればそれを合計
-    // 無ければ 0 (Pythonスクリプト未実行)
     const total = chunks.reduce((sum, chunk) => sum + (chunk.qCount || 0), 0);
-
-    if (countEl) {
-      countEl.textContent = total;
-      if (total === 0) {
-        console.warn('問題数が0です。generate_data.pyを実行してindex.jsonを更新してください。');
-      }
-    }
+    if (countEl) countEl.textContent = total;
   } catch (e) {
     console.error('Counts error:', e);
   }
@@ -451,23 +456,15 @@ function submitAnswer() {
   correctIndices.sort((a, b) => a - b);
 
   const ok = eqSetCompat(selected, correctIndices);
-  pushTempDetail(q.id || current, ok);
+  
+  // 詳細情報を履歴保存用にプッシュ
+  pushTempDetail(q, ok);
   
   if (ok) {
     correctCount++;
     if (scoreEl) scoreEl.textContent = correctCount;
   }
   
-  if (q.chapter) {
-    const oldVal = stats.chapter.get(q.chapter) || 0;
-    stats.chapter.set(q.chapter, oldVal + (ok ? 1 : 0));
-  }
-  const lvl = q.klevel || q.level;
-  if (lvl) {
-    const oldVal = stats.klevel.get(lvl) || 0;
-    stats.klevel.set(lvl, oldVal + (ok ? 1 : 0));
-  }
-
   if (judgeEl) {
     if (ok) {
       judgeEl.textContent = '正解！';
@@ -521,12 +518,12 @@ function submitAnswer() {
 function startWithFilters() {
   current = 0; 
   correctCount = 0; 
-  tempDetails = [];
+  tempDetails = []; // リセット
   const cond = getCurrentConditionsFromUI();
   
   loadQuestionsByIndex(cond).then(raw => {
     if (!raw || !raw.length) { 
-      alert('条件に合う問題が見つかりませんでした。\n(generate_data.py を実行してデータを更新してください)'); 
+      alert('条件に合う問題が見つかりませんでした。'); 
       return; 
     }
     
@@ -536,7 +533,10 @@ function startWithFilters() {
       return; 
     }
 
-    sessionQuestions = reservoirSample(filtered, numToAsk);
+    // 【修正点】選んだ後にシャッフル（並び順ランダム化）
+    const sampled = reservoirSample(filtered, numToAsk);
+    sessionQuestions = shuffleArray(sampled);
+
     showRoute('quiz');
     renderQuestions(sessionQuestions);
     
@@ -559,6 +559,7 @@ function getCurrentConditionsFromUI() {
   return cond;
 }
 
+// ====== 終了処理・グラフ描画 ======
 function finishSession() {
   const user = getActiveUserId();
   saveHistory(user, { 
@@ -581,7 +582,73 @@ function finishSession() {
     finalRate.textContent = rate;
   }
   
-  renderDashboard(); 
+  // ダッシュボード（履歴）更新
+  renderDashboard();
+  
+  // 【追加】今回のセッションのグラフを描画
+  drawResultCharts();
+}
+
+// ====== チャート描画ロジック ======
+function drawResultCharts() {
+  // 集計用オブジェクト
+  const chapterStats = {};
+  const kLevelStats = {};
+
+  // tempDetails から集計
+  tempDetails.forEach(d => {
+    // 章の集計
+    const ch = d.chapter || '未分類';
+    if (!chapterStats[ch]) chapterStats[ch] = { total: 0, correct: 0 };
+    chapterStats[ch].total++;
+    if (d.correct) chapterStats[ch].correct++;
+
+    // Kレベルの集計
+    const lvl = d.klevel || '不明';
+    if (!kLevelStats[lvl]) kLevelStats[lvl] = { total: 0, correct: 0 };
+    kLevelStats[lvl].total++;
+    if (d.correct) kLevelStats[lvl].correct++;
+  });
+
+  // チャート描画関数
+  const draw = (canvasId, statsObj, labelText, instanceVar) => {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return null;
+
+    // 既存のチャートがあれば破棄
+    if (instanceVar) instanceVar.destroy();
+
+    const labels = Object.keys(statsObj);
+    const data = labels.map(k => {
+      const s = statsObj[k];
+      return Math.round((s.correct / s.total) * 100);
+    });
+
+    return new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: labelText + ' 正答率 (%)',
+          data: data,
+          backgroundColor: 'rgba(43, 87, 151, 0.6)',
+          borderColor: 'rgba(43, 87, 151, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: { beginAtZero: true, max: 100 }
+        },
+        responsive: true
+      }
+    });
+  };
+
+  // 章別チャート
+  chartChapter = draw('chapterChart', chapterStats, '章別', chartChapter);
+  // Kレベルチャート
+  chartKLevel = draw('kChart', kLevelStats, 'Kレベル別', chartKLevel);
 }
 
 function renderDashboard() {
@@ -597,6 +664,8 @@ function renderDashboard() {
     li.textContent = (idx + 1) + '. 正答 ' + h.correct + '/' + h.total + ' - ' + dateStr;
     listEl.appendChild(li);
   });
+  
+  // ダッシュボード側にも累積グラフを出すならここに追記可能（今回は結果画面優先）
 }
 
 function restart() { 
