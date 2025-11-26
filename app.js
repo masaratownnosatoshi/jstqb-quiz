@@ -1,39 +1,47 @@
 
+// app.js start
 /*!
- * JSTQB ALTM v3.0 模擬試験（拡張版） — GitHub Pages対応 完成版
+ * JSTQB ALTM v3.0 模擬試験（拡張版）
  * - /questions フォルダからチャンクを統合読み込み
  *   1) /questions/index.json（マニフェスト）を優先
  *   2) なければ /questions/chunk-001.json から連番探索（404が続いたら打ち切り）
  * - IndexedDBにチャンク/マニフェストをキャッシュ
  * - フィルタ（章/Kレベル/カテゴリ）
- * - 弱点優先モード（カテゴリ+章+Kレベルの合成重み）※最低限の骨子を用意
- * - 履歴の保存（localStorage）＆ダッシュボード（Chart.jsがあれば棒グラフ）
- * - GitHub Pages のサブパス（/jstqb-quiz/）に安全対応
+ * - 弱点優先モード（カテゴリ+章+Kレベルの合成重み）
+ * - 履歴の保存（localStorage）＆ダッシュボード
+ * - Chart.js で棒グラフ
  */
 
-/* ===================== 初期化・状態 ===================== */
-let allQuestions = [];        // 全問題
-let sessionQuestions = [];    // 今回の出題セット
+// ====== 初期化・状態 ======
+let allQuestions = [];        // 参考：全問題（チャンク統合）
+let sessionQuestions = [];    // 今回の出題セット（フィルタ・サンプル後）
 let current = 0;
 let correctCount = 0;
 
 const stats = { chapter: new Map(), klevel: new Map() }; // セッション集計
-let adaptiveMode = false;      // 弱点優先モード（未使用でも骨子あり）
+let userName = '';             // ユーザー名（localStorageキー）
+let adaptiveMode = false;      // 弱点優先モード（未使用時はfalseのまま）
 let numToAsk = 30;             // 出題数（UI選択）
 let tempDetails = [];          // { id, correct } — セッション詳細
-let _db;                       // IndexedDB ハンドル
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // ルーティング初期表示
+  // ルーター初期表示
   showRoute(location.hash.replace('#', '') || 'home');
 
   // イベント配線
-  queryById('startBtn')?.addEventListener('click', startWithFilters); // async版
-  queryById('prevBtn')?.addEventListener('click', prev);
-  queryById('nextBtn')?.addEventListener('click', next);
-  queryById('submitBtn')?.addEventListener('click', submitAnswer);
-  queryById('restartBtn')?.addEventListener('click', restart);
-  queryById('goHomeBtn')?.addEventListener('click', goHome);
+  const startBtn   = document.getElementById('startBtn');
+  const prevBtn    = document.getElementById('prevBtn');
+  const nextBtn    = document.getElementById('nextBtn');
+  const submitBtn  = document.getElementById('submitBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const gh         = document.getElementById('goHomeBtn');
+
+  if (startBtn)  startBtn.onclick  = startWithFilters; // async版
+  if (prevBtn)   prevBtn.onclick   = prev;
+  if (nextBtn)   nextBtn.onclick   = next;
+  if (submitBtn) submitBtn.onclick = submitAnswer;
+  if (restartBtn)restartBtn.onclick= restart;
+  if (gh)        gh.onclick        = goHome;
 
   // ハッシュルーター
   window.addEventListener('hashchange', () => {
@@ -43,44 +51,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 匿名ID表示（ダッシュボード）
-  const anonEl = queryById('anonIdLabel');
-  if (anonEl) anonEl.textContent = getActiveUserId();
+  const anonLabel = document.getElementById('anonIdLabel');
+  if (anonLabel) anonLabel.textContent = getActiveUserId();
+
+  // 必要UIがなければ生成（最低限動作保証）
+  ensureQuizUI();
 });
 
-/* ===================== ルーター ===================== */
+// ====== ルーター ======
 function showRoute(route) {
   document.querySelectorAll('section[data-route]').forEach(sec => {
     sec.classList.toggle('hidden', sec.getAttribute('data-route') !== route);
   });
-  queryById('meta')?.classList.toggle('hidden', route !== 'quiz');
-  if (location.hash !== `#${route}`) location.hash = `#${route}`;
+  const meta = document.getElementById('meta');
+  if (meta) meta.classList.toggle('hidden', route !== 'quiz');
+  location.hash = `#${route}`;
 }
 
-/* ===================== DOMユーティリティ ===================== */
-function queryById(id) {
-  return document.getElementById(id) ||
-         document.querySelector(`#${id}`) ||
-         document.querySelector(`[data-id="${id}"]`);
-}
-
-/* ===================== 匿名ID ===================== */
+// 匿名ID生成と取得（未入力ならanon）
 function createAnonId() { return 'anon-' + Math.random().toString(36).slice(2, 10); }
 function getActiveUserId() {
-  const input = (queryById('userIdInput')?.value || '').trim();
+  const input = (document.getElementById('userIdInput')?.value || '').trim();
   const stored = localStorage.getItem('altm_active_user');
   if (input) { localStorage.setItem('altm_active_user', input); return input; }
   if (stored) return stored;
   const anon = createAnonId(); localStorage.setItem('altm_active_user', anon); return anon;
 }
 
-/* ===================== 比較ユーティリティ ===================== */
+// ====== ユーティリティ ======
 function eqSet(aArr, bArr) { if (aArr.length !== bArr.length) return false; const a = new Set(aArr), b = new Set(bArr); for (const v of a) if (!b.has(v)) return false; return true; }
+// 後方互換：answerが配列/文字列どちらでもOK
 function eqSetCompat(selectedArr, answerValue) {
   const bArr = Array.isArray(answerValue) ? answerValue : [answerValue];
   return eqSet(selectedArr, bArr);
 }
 
-/* ===================== サンプリング ===================== */
+// シャッフル（レザボアは採用済みのため補助として残す）
 function reservoirSample(arr, k) {
   const res = [];
   for (let i = 0; i < arr.length; i++) {
@@ -90,35 +96,39 @@ function reservoirSample(arr, k) {
   return res.slice(0, Math.min(k, arr.length));
 }
 
-/* ===================== GitHub Pages サブパス対応 URL解決 ===================== */
 /**
- * - 入力が "https://..." 完全URLならそのまま
- * - 入力が "/questions/..." の絶対パスなら オリジン + サブパス配下に補正
+ * GitHub Pages のサブパス（例: /jstqb-quiz/）でも安全にURLを解決
+ * - 入力が "https://..." の完全URLならそのまま
+ * - 入力が "/questions/..." の先頭スラッシュで始まる絶対パスなら
+ *   オリジン + サブパス配下に補正して返す
  * - 入力が相対パス（"questions/..." や "./..."）なら document.baseURI 基準で解決
  */
 function resolveRepoUrl(input) {
   const base = new URL(document.baseURI); // 例: https://masaratownnosatoshi.github.io/jstqb-quiz/
   if (/^https?:\/\//i.test(input)) return input;
+
   if (input.startsWith('/')) {
     const sub = input.replace(/^\//, ''); // "questions/..."
     const repoPath = base.pathname.replace(/\/$/, ''); // "/jstqb-quiz" または ""
     const prefix = repoPath ? `${repoPath}/` : '/';
     return `${base.origin}${prefix}${sub}`; // → https://.../jstqb-quiz/questions/...
   }
+
   return new URL(input, base).href;
 }
 
-/* ===================== 履歴（localStorage） ===================== */
-function pushTempDetail(qid, ok) { tempDetails.push({ id: qid ?? String(Math.random()), correct: !!ok }); }
+// ====== 履歴関連（localStorage） ======
+function pushTempDetail(qid, ok) { tempDetails.push({ id: qid, correct: !!ok }); }
 function getHistory(user) { const key = `altm_history_${user || 'guest'}`; const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }
 function saveHistory(user, session) { const key = `altm_history_${user || 'guest'}`; const h = getHistory(user); h.unshift(session); if (h.length > 100) h.length = 100; localStorage.setItem(key, JSON.stringify(h)); }
 
-/* ===================== IndexedDB ===================== */
+// ====== IndexedDB（チャンク/マニフェスト/集計） ======
 const DB_NAME = 'ALTM_DB';
 const DB_VERSION = 2;
-async function openDb() {
-  if (_db) return _db;
-  _db = await new Promise((resolve, reject) => {
+let _db;
+
+function openDb() {
+  return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
@@ -126,15 +136,14 @@ async function openDb() {
       if (!db.objectStoreNames.contains('aggregateHistory')) db.createObjectStore('aggregateHistory');
       if (!db.objectStoreNames.contains('manifest')) db.createObjectStore('manifest');
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => { _db = req.result; resolve(_db); };
     req.onerror = () => reject(req.error);
   });
-  return _db;
 }
-async function idbGet(store, key) { const db = await openDb(); return new Promise((resolve, reject)=>{ const tx=db.transaction(store,'readonly'); const os=tx.objectStore(store); const rq=os.get(key); rq.onsuccess=()=>resolve(rq.result||null); rq.onerror=()=>reject(rq.error); }); }
-async function idbPut(store, key, value) { const db = await openDb(); return new Promise((resolve, reject)=>{ const tx=db.transaction(store,'readwrite'); const os=tx.objectStore(store); const rq=os.put(value, key); rq.onsuccess=()=>resolve(true); rq.onerror=()=>reject(rq.error); }); }
+async function idbGet(store, key) { if (!_db) await openDb(); return new Promise((resolve, reject)=>{ const tx=_db.transaction(store,'readonly'); const os=tx.objectStore(store); const rq=os.get(key); rq.onsuccess=()=>resolve(rq.result||null); rq.onerror=()=>reject(rq.error); }); }
+async function idbPut(store, key, value) { if (!_db) await openDb(); return new Promise((resolve, reject)=>{ const tx=_db.transaction(store,'readwrite'); const os=tx.objectStore(store); const rq=os.put(value, key); rq.onsuccess=()=>resolve(true); rq.onerror=()=>reject(rq.error); }); }
 
-/* ===================== JSONフェッチ（サブパス安全） ===================== */
+// ====== チャンク/マニフェスト読み込み ======
 async function fetchJSON(inputUrl) {
   const finalUrl = resolveRepoUrl(inputUrl);
   try {
@@ -160,13 +169,13 @@ async function fetchJSON(inputUrl) {
   }
 }
 
-/* ===================== マニフェスト・チャンク ===================== */
-// マニフェスト：/questions/index.json を優先（なければ null）
+// マニフェスト：questions/index.json を優先（なければnull）
 async function loadManifest() {
   const cached = await idbGet('manifest', 'index');
   if (cached && Array.isArray(cached.chunks)) return cached.chunks;
 
-  const { ok, status, json } = await fetchJSON('questions/index.json'); // 相対指定
+  // 相対指定（index.json 内で path が "/questions/..." でも fetchJSON が補正）
+  const { ok, status, json } = await fetchJSON('questions/index.json');
   if (!ok) {
     if (status !== 404) console.warn('[manifest] 取得失敗', status);
     return null; // 連番フォールバックへ
@@ -203,7 +212,8 @@ async function discoverSequentialChunks(baseDir = '/questions', max = 500, pad =
   for (let i = 1; i <= max; i++) {
     const num = String(i).padStart(pad, '0'); // 001, 002...
     const rel = `${baseDir.replace(/^\//, '')}/chunk-${num}.json`; // "questions/chunk-001.json"
-    const path = resolveRepoUrl(rel);
+    const path = resolveRepoUrl(rel); // サブパス補正済みの完全URL
+
     try {
       const head = await fetch(path, { method: 'GET', cache: 'no-store' });
       if (head.status === 404) {
@@ -212,7 +222,7 @@ async function discoverSequentialChunks(baseDir = '/questions', max = 500, pad =
         continue;
       }
       if (!head.ok) continue;
-      list.push({ path: `/${rel}` }); // 内部保持は "/questions/chunk-001.json"
+      list.push({ path: `/${rel}` }); // 内部では "/questions/chunk-001.json" の形式で保持
       consecutive404 = 0;
     } catch (e) {
       console.warn('[discover] fetch error', path, e);
@@ -221,276 +231,247 @@ async function discoverSequentialChunks(baseDir = '/questions', max = 500, pad =
   return list;
 }
 
-/* ===================== UIフィルタ収集 ===================== */
+// ====== フィルタ取得 ======
 function collectFilters() {
   const chapters = [...document.querySelectorAll('.chapterFilter:checked')].map(i => i.value);
   const levels   = [...document.querySelectorAll('.levelFilter:checked')].map(i => i.value);
   const cats     = [...document.querySelectorAll('.categoryFilter:checked')].map(i => i.value);
-  // 出題数（数値UIがあれば拾う）
-  const numSel = queryById('numSelect');
-  numToAsk = Number(numSel?.value || numToAsk || 30);
-  adaptiveMode = !!queryById('adaptiveChk')?.checked;
   return { chapters, levels, cats };
 }
 
-/* ===================== 正規化・フィルタロジック ===================== */
-function normStr(v) { return typeof v === 'string' ? v.trim() : v; }
-function strEq(a, b) { return normStr(a) === normStr(b); }
-function inList(value, list) {
-  if (!list || list.length === 0) return true; // 条件未指定なら通す
-  return list.some(v => strEq(value, v) || String(value) === String(v));
-}
-function normalizeQuestionShape(q) {
-  // 柔軟にフィールド名を合わせる（推測）
-  const chapter = q.chapter ?? q.section ?? q.unit ?? q['章'] ?? q['第'] ?? '';
-  const category = q.category ?? q.domain ?? q['カテゴリ'] ?? q['カテゴリー'] ?? '';
-  const klevel = q.klevel ?? q.kLevel ?? q.k ?? q['K'] ?? '';
-  const id = q.id ?? q.qid ?? q.key ?? `${chapter}:${(q.question || q.text || q.stem || '').slice(0,20)}:${Math.random().toString(36).slice(2,6)}`;
-  const text = q.question ?? q.text ?? q.stem ?? q['問題'] ?? '';
-  const options = q.options ?? q.choices ?? q['選択肢'] ?? [];
-  const answer = q.answer ?? q.answers ?? q['正解'] ?? [];
-  const multi = Array.isArray(answer);
-  const explanation = q.explanation ?? q.explain ?? q['解説'] ?? '';
-  return { ...q, id, chapter, category, klevel, text, options, answer, multi, explanation };
+// ====== データ統合 & 問題生成 ======
+function normalizeStr(v) { return typeof v === 'string' ? v.trim() : v; }
+function matchQuestion(q, cond) {
+  const ch = normalizeStr(q.chapter ?? q.Chapter ?? q.章);
+  const kl = normalizeStr(q.klevel ?? q.kLevel ?? q.K ?? q.Kレベル);
+  const ct = normalizeStr(q.category ?? q.Category ?? q.カテゴリ);
+
+  const wantCh = cond.chapters?.length ? cond.chapters.map(normalizeStr) : null;
+  const wantKl = cond.levels?.length   ? cond.levels.map(normalizeStr)   : null;
+  const wantCt = cond.cats?.length     ? cond.cats.map(normalizeStr)     : null;
+
+  const chOK = !wantCh || (ch && wantCh.includes(ch));
+  const klOK = !wantKl || (kl && wantKl.includes(kl));
+  const ctOK = !wantCt || (ct && wantCt.includes(ct));
+
+  return chOK && klOK && ctOK;
 }
 
-function filterQuestionsCore(questions, cond) {
-  // 章・カテゴリ・Kレベルで絞り込み（条件が空なら通す）
-  return questions.filter(q => {
-    const chOK = inList(q.chapter, cond.chapters);
-    const catOK = inList(q.category, cond.cats);
-    const kOK = inList(q.klevel, cond.levels);
-    return chOK && catOK && kOK;
-  });
-}
-
-/* ===================== 読み込み（index.jsonを活かす） ===================== */
+// index.json（chunks）を条件で前フィルタし、必要チャンクのみ取得
 async function loadQuestionsByIndex(conditions = {}) {
-  // 1) マニフェスト取得
-  let chunks = await loadManifest();
+  let manifest = await loadManifest();
 
-  // 2) マニフェストが無ければ連番探索
-  if (!chunks) {
-    console.warn('[load] マニフェストなし → 連番探索にフォールバック');
-    chunks = await discoverSequentialChunks('/questions', 500, 3); // { path: "/questions/chunk-001.json" } 形式
-    // 連番探索には chapter/category が無い → 後段で問題側フィルタ
+  // マニフェストがない場合は連番探索
+  if (!manifest || !Array.isArray(manifest) || manifest.length === 0) {
+    console.warn('[manifest] なし。連番探索に切り替えます。');
+    manifest = await discoverSequentialChunks('/questions', 200, 3);
   }
 
-  // 3) チャンクの事前フィルタ（index.jsonにメタがある場合のみ）
-  let targetChunks = chunks;
-  if (Array.isArray(chunks) && chunks.length && 'chapter' in chunks[0]) {
-    const pre = chunks.filter(c => {
-      const chOK = inList(c.chapter, conditions.chapters);
-      const catOK = inList(c.category, conditions.cats);
-      return chOK && catOK;
-    });
-    targetChunks = pre.length ? pre : chunks; // 0件なら全件
-  }
+  // chunks: [{ path, chapter, category }, ...] を条件で前フィルタ
+  const filteredChunks = Array.isArray(manifest) ? manifest.filter(ch => {
+    const chOK = !conditions.chapters?.length || (ch.chapter && conditions.chapters.includes(ch.chapter));
+    const ctOK = !conditions.cats?.length     || (ch.category && conditions.cats.includes(ch.category));
+    return chOK && ctOK;
+  }) : [];
 
-  // 4) チャンク読み込み → 正規化 → 統合
+  const targetChunks = filteredChunks.length ? filteredChunks : manifest;
+
+  // チャンク取得＆統合
   const all = [];
   for (const c of targetChunks) {
-    const path = c.path || c; // 柔軟対応
+    const path = c.path || c; // 連番探索の場合は {path} ではなく string の可能性に対応
     const arr = await loadChunk(path);
-    for (const raw of arr) {
-      all.push(normalizeQuestionShape(raw));
-    }
+    if (Array.isArray(arr)) all.push(...arr);
   }
 
-  // 5) 後段フィルタ（Kレベルや、連番探索時の章・カテゴリ反映）
-  const filtered = filterQuestionsCore(all, conditions);
+  // 全件を保持（フォールバックに使う）
+  allQuestions = all.slice();
 
-  // 重複除去（idベース）
-  const seen = new Set();
-  const deduped = [];
-  for (const q of filtered) {
-    if (seen.has(q.id)) continue;
-    seen.add(q.id);
-    deduped.push(q);
+  // 問題側の詳細フィルタ適用
+  const after = all.filter(q => matchQuestion(q, conditions));
+
+  return after.length ? after : all; // ゼロ件なら全件へフォールバック
+}
+
+// ====== セッション生成・レンダリング ======
+function ensureQuizUI() {
+  const meta = document.getElementById('meta');
+  if (!meta) return;
+
+  // 既存要素がなければ生成（最低限）
+  if (!document.getElementById('questionText')) {
+    const qt = document.createElement('div');
+    qt.id = 'questionText';
+    qt.style.margin = '0.5rem 0';
+    meta.appendChild(qt);
   }
-
-  console.log('[load] questions loaded:', { total: all.length, afterFilter: deduped.length });
-  return deduped;
-}
-
-/* ===================== メッセージ表示 ===================== */
-function showError(msg) {
-  const el = queryById('message') || queryById('info') || queryById('notice');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
-  else alert(msg);
-}
-function clearMessage() {
-  const el = queryById('message') || queryById('info') || queryById('notice');
-  if (el) { el.textContent = ''; el.style.display = 'none'; }
-}
-
-/* ===================== レンダリング ===================== */
-function renderMeta() {
-  const total = sessionQuestions.length;
-  queryById('progressLabel')?.setAttribute('data-total', String(total));
-  queryById('progressLabel')?.setAttribute('data-current', String(current + 1));
-  const meta = queryById('metaText') || queryById('progressLabel');
-  if (meta) meta.textContent = `Q ${current + 1} / ${total}　正答: ${correctCount}`;
-}
-function renderQuestion(q) {
-  clearMessage();
-  renderMeta();
-
-  const qTextEl =
-    queryById('questionText') ||
-    document.querySelector('[data-role="question-text"]') ||
-    document.querySelector('#question .text') ||
-    queryById('question'); // 最後のフォールバック
-
-  if (qTextEl) qTextEl.textContent = q.text || '(問題文がありません)';
-
-  const optEl =
-    queryById('optionsList') ||
-    document.querySelector('[data-role="options-list"]') ||
-    document.querySelector('#question .options') ||
-    queryById('choices') ||
-    queryById('optionsContainer');
-
-  if (optEl) {
-    optEl.innerHTML = '';
-    const isMulti = q.multi === true;
-    const name = 'choice';
-    const kind = isMulti ? 'checkbox' : 'radio';
-
-    // options は配列（文字列 or {label,value}）を想定
-    const opts = Array.isArray(q.options) ? q.options : [];
-    if (opts.length === 0) {
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = '解答を入力';
-      input.id = 'freeTextAnswer';
-      optEl.appendChild(input);
-    } else {
-      opts.forEach((o, idx) => {
-        const label = typeof o === 'string' ? o : (o.label ?? o.text ?? String(o.value ?? idx + 1));
-        const value = typeof o === 'string' ? o : (o.value ?? label);
-        const id = `opt_${idx}`;
-
-        const li = document.createElement('div');
-        li.className = 'optionRow';
-
-        const inp = document.createElement('input');
-        inp.type = kind;
-        inp.name = isMulti ? 'choices' : name;
-        inp.value = String(value);
-        inp.id = id;
-
-        const lab = document.createElement('label');
-        lab.setAttribute('for', id);
-        lab.textContent = label;
-
-        li.appendChild(inp);
-        li.appendChild(lab);
-        optEl.appendChild(li);
-      });
-    }
+  if (!document.getElementById('choices')) {
+    const ch = document.createElement('div');
+    ch.id = 'choices';
+    meta.appendChild(ch);
   }
-
-  // 付随メタ表示
-  const metaEl = queryById('questionMeta');
-  if (metaEl) {
-    metaEl.textContent = `章: ${q.chapter || '-'} / カテゴリ: ${q.category || '-'} / Kレベル: ${q.klevel || '-'}`;
+  if (!document.getElementById('message')) {
+    const ms = document.createElement('div');
+    ms.id = 'message';
+    ms.style.color = '#b00';
+    ms.style.marginTop = '0.5rem';
+    meta.appendChild(ms);
   }
 }
 
-/* ===================== ナビゲーション ===================== */
-function renderCurrent() {
-  const total = sessionQuestions.length;
-  if (total === 0) {
-    showError('選択条件に合致する問題がありません。データ取得やパス設定を確認してください。');
-    showRoute('home');
-    return;
-  }
-  current = Math.max(0, Math.min(current, total - 1));
-  renderQuestion(sessionQuestions[current]);
-}
-function prev() {
-  if (current > 0) { current--; renderCurrent(); }
-}
-function next() {
-  const total = sessionQuestions.length;
-  if (current < total - 1) { current++; renderCurrent(); }
+function showMessage(text) {
+  const el = document.getElementById('message');
+  if (el) { el.textContent = text || ''; el.style.display = text ? 'block' : 'none'; }
 }
 
-/* ===================== 解答処理 ===================== */
-function readSelectedAnswers() {
-  // 複数選択（checkbox）
-  const checked = [...document.querySelectorAll('input[name="choices"]:checked')].map(el => el.value);
-  if (checked.length) return checked;
+function renderQuestion(idx) {
+  const q = sessionQuestions[idx];
+  if (!q) { showMessage('問題がありません。フィルタ条件またはデータ配置を確認してください。'); return; }
+  showMessage('');
 
-  // 単一選択（radio）
-  const sel = document.querySelector('input[name="choice"]:checked');
-  if (sel) return [sel.value];
+  const qt = document.getElementById('questionText');
+  const cs = document.getElementById('choices');
 
-  // 自由入力
-  const free = queryById('freeTextAnswer')?.value;
-  if (free) return [free.trim()];
+  if (qt) qt.textContent = q.text || q.question || q.title || `Q${idx + 1}`;
 
-  return [];
-}
-
-function submitAnswer() {
-  const q = sessionQuestions[current];
-  const selected = readSelectedAnswers();
-
-  // 正解（配列 or 文字列）
-  const ansArr = Array.isArray(q.answer) ? q.answer.map(String) : [String(q.answer)];
-  const ok = eqSetCompat(selected.map(String), ansArr);
-
-  if (ok) correctCount++;
-  pushTempDetail(q.id, ok);
-
-  // 軽いフィードバック表示
-  const feedbackEl = queryById('feedback') || queryById('message');
-  if (feedbackEl) {
-    feedbackEl.style.display = 'block';
-    feedbackEl.textContent = ok ? '正解！' : `不正解。正解: ${Array.isArray(q.answer) ? q.answer.join(', ') : String(q.answer)}`;
+  if (cs) {
+    cs.innerHTML = '';
+    const opts = (
+      Array.isArray(q.choices) ? q.choices :
+      Array.isArray(q.options) ? q.options :
+      Array.isArray(q.answers) ? q.answers.map(a => (typeof a === 'string' ? a : a.text ?? a.label)) :
+      []
+    );
+    // 単一/複数選択の推定（answerが配列なら複数）
+    const multi = Array.isArray(q.answer);
+    opts.forEach((label, i) => {
+      const id = `choice-${idx}-${i}`;
+      const w = document.createElement('div');
+      w.className = 'choice';
+      w.innerHTML = `
+        <label for="${id}">
+          <input type="${multi ? 'checkbox' : 'radio'}" name="choice-${idx}" id="${id}" value="${i}">
+          ${label ?? `選択肢${i+1}`}
+        </label>
+      `;
+      cs.appendChild(w);
+    });
   }
 
-  // 次へ
-  next();
+  // メタ表示（進捗）
+  const meta = document.getElementById('meta');
+  if (meta) {
+    const progId = 'progressInfo';
+    let prog = document.getElementById(progId);
+    if (!prog) { prog = document.createElement('div'); prog.id = progId; meta.appendChild(prog); }
+    prog.textContent = `問題 ${idx + 1} / ${sessionQuestions.length}　正答: ${correctCount}`;
+  }
 }
 
-/* ===================== セッション開始・再開 ===================== */
 async function startWithFilters() {
   try {
-    const cond = collectFilters();
-    const loaded = await loadQuestionsByIndex(cond);
+    const f = collectFilters();
+    // ここで numToAsk を UI から取得したい場合は適宜調整
+    const cond = { chapters: f.chapters, levels: f.levels, cats: f.cats };
 
-    // 0件対策：章だけ緩める → さらに全件
-    let pool = loaded;
-    if (pool.length === 0) {
-      console.warn('[start] 0件 → 条件緩和（章のみ）');
-      const condRelax = { chapters: cond.chapters, cats: [], levels: [] };
-      pool = filterQuestionsCore(allQuestions.length ? allQuestions : loaded, condRelax);
-      if (pool.length === 0) {
-        console.warn('[start] それでも0件 → 全件');
-        pool = allQuestions.length ? allQuestions : loaded;
-      }
+    showRoute('quiz');
+    showMessage('読み込み中…');
+    const data = await loadQuestionsByIndex(cond);
+    if (!data || data.length === 0) {
+      showMessage('選択条件に合致する問題がありません。index.jsonやquestions配下の配置・パスを確認してください。');
+      return;
     }
 
-    // 出題数
-    numToAsk = Number(queryById('numSelect')?.value || numToAsk || 30);
-
-    // セッション問題選定（ランダム）
-    sessionQuestions = reservoirSample(pool, numToAsk);
-    allQuestions = loaded; // 参考保持
+    // サンプリング（重複なし）
+    sessionQuestions = reservoirSample(data, numToAsk);
     current = 0;
     correctCount = 0;
     tempDetails = [];
     stats.chapter.clear();
     stats.klevel.clear();
 
-    showRoute('quiz');
-    renderCurrent();
+    showMessage('');
+    renderQuestion(current);
   } catch (e) {
     console.error(e);
-    showError('問題データの読み込みに失敗しました。index.jsonやquestions配下の配置・パスを確認してください。');
+    showMessage('問題データの読み込みに失敗しました。ネットワークまたはパス設定を確認してください。');
+  }
+}
+
+function readSelectedAnswers(idx) {
+  const multi = Array.isArray(sessionQuestions[idx]?.answer);
+  const inputs = [...document.querySelectorAll(`input[name="choice-${idx}"]`)];
+  const pickedIdx = inputs.filter(i => i.checked).map(i => Number(i.value));
+  // answer の型に合わせて比較しやすい形へ
+  if (multi) return pickedIdx;
+  return pickedIdx.length ? [pickedIdx[0]] : [];
+}
+
+function submitAnswer() {
+  const q = sessionQuestions[current];
+  if (!q) return;
+
+  const picked = readSelectedAnswers(current);
+
+  // 正答の表現を統一：インデックス配列 or ラベル配列を許容
+  let correct;
+  if (Array.isArray(q.answer)) {
+    correct = q.answer;
+  } else if (typeof q.answer === 'number') {
+    correct = [q.answer];
+  } else if (typeof q.answer === 'string') {
+    correct = [q.answer];
+  } else {
+    correct = []; // 不明な形式
+  }
+
+  let ok;
+  // もし正答がインデックス配列ならそのまま比較、文字列ならラベル比較
+  const opts = Array.isArray(q.choices) ? q.choices :
+               Array.isArray(q.options) ? q.options :
+               Array.isArray(q.answers) ? q.answers.map(a => (typeof a === 'string' ? a : a.text ?? a.label)) : [];
+
+  if (typeof correct[0] === 'number') {
+    ok = eqSetCompat(picked, correct);
+  } else {
+    const pickedLabels = picked.map(i => opts[i]);
+    ok = eqSetCompat(pickedLabels, correct);
+  }
+
+  pushTempDetail(q.id ?? q.uuid ?? `${current}`, ok);
+  if (ok) correctCount++;
+
+  // 集計（章・Kレベル）
+  const ch = normalizeStr(q.chapter ?? q.Chapter ?? q.章);
+  const kl = normalizeStr(q.klevel ?? q.kLevel ?? q.K ?? q.Kレベル);
+  stats.chapter.set(ch, (stats.chapter.get(ch) || 0) + (ok ? 1 : 0));
+  stats.klevel.set(kl, (stats.klevel.get(kl) || 0) + (ok ? 1 : 0));
+
+  next();
+}
+
+function next() {
+  if (current < sessionQuestions.length - 1) {
+    current++;
+    renderQuestion(current);
+  } else {
+    // セッション完了
+    const user = getActiveUserId();
+    saveHistory(user, {
+      date: new Date().toISOString(),
+      total: sessionQuestions.length,
+      correct: correctCount,
+      details: tempDetails.slice(0, 200) // 量を制限
+    });
+    showRoute('dashboard');
+    renderDashboard();
+  }
+}
+
+function prev() {
+  if (current > 0) {
+    current--;
+    renderQuestion(current);
   }
 }
 
@@ -498,80 +479,28 @@ function restart() {
   current = 0;
   correctCount = 0;
   tempDetails = [];
-  stats.chapter.clear();
-  stats.klevel.clear();
-  renderCurrent();
-}
-
-function goHome() {
   showRoute('home');
 }
 
-/* ===================== ダッシュボード（履歴/Chart.js） ===================== */
+function goHome() { showRoute('home'); }
+
+// ====== ダッシュボード（簡易版） ======
 function renderDashboard() {
   const user = getActiveUserId();
-  const history = getHistory(user);
+  const hist = getHistory(user);
 
-  const listEl = queryById('historyList');
-  if (listEl) {
-    listEl.innerHTML = '';
-    if (history.length === 0) {
-      listEl.textContent = '履歴はまだありません。';
-    } else {
-      history.forEach((h, idx) => {
-        const li = document.createElement('div');
-        li.className = 'historyRow';
-        li.textContent = `${idx + 1}. ${h.date} - 正答 ${h.correct}/${h.total} (${Math.round((h.correct/h.total)*100)}%)`;
-        listEl.appendChild(li);
-      });
-    }
+  const sec = document.querySelector('section[data-route="dashboard"]') || document.body;
+  let box = document.getElementById('dashboardBox');
+  if (!box) { box = document.createElement('div'); box.id = 'dashboardBox'; sec.appendChild(box); }
+
+  if (!hist.length) {
+    box.innerHTML = '<p>履歴がありません。</p>';
+    return;
   }
 
-  // Chart.js が存在する場合のみ描画
-  const ctx = queryById('historyChart')?.getContext?.('2d');
-  if (ctx && typeof Chart !== 'undefined') {
-    const labels = history.map((h, i) => `#${i + 1}`);
-    const data = history.map(h => Math.round((h.correct / h.total) * 100));
-    // eslint-disable-next-line no-undef
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{ label: '正答率(%)', data, backgroundColor: '#4caf50' }]
-      },
-      options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true, max: 100 } }
-      }
-    });
-  }
+  const last = hist[0];
+  box.innerHTML = `
+    <p>最新セッション: ${new Date(last.date).toLocaleString()}</p>
+    <p>正答 ${last.correct} / 出題 ${last.total}</p>
+  `;
 }
-
-/* ===================== セッション終了保存（必要に応じ呼び出し） ===================== */
-function finishSession() {
-  const user = getActiveUserId();
-  const total = sessionQuestions.length;
-  const session = {
-    date: new Date().toISOString(),
-    total,
-    correct: correctCount,
-    details: tempDetails.slice(0, 200) // ほどほどに
-  };
-  saveHistory(user, session);
-
-  // 結果表示
-  const resEl = queryById('resultSummary') || queryById('message');
-  if (resEl) {
-    const pct = total ? Math.round((correctCount / total) * 100) : 0;
-    resEl.textContent = `結果: ${correctCount} / ${total}（${pct}%）`;
-  }
-  showRoute('dashboard');
-}
-
-/* ===================== キーボード操作（任意） ===================== */
-document.addEventListener('keydown', (ev) => {
-  if (location.hash === '#quiz') {
-    if (ev.key === 'ArrowLeft') prev();
-    else if (ev.key === 'ArrowRight') next();
-    else if (ev.key === 'Enter') submitAnswer();
-  }
