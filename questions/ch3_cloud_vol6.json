@@ -1,0 +1,21 @@
+[
+  {
+    "id": "Q3-CLD-V6-01",
+    "chapter": "第3章",
+    "level": "K2",
+    "category": "クラウド",
+    "style": "用語",
+    "type": "単一選択",
+    "question": "クラウドネイティブ開発におけるQA（Quality Assurance）の役割変化は？",
+    "options": [
+      "「品質保証（Gatekeeper）」から「品質支援（Quality Assistance / Coach）」へ",
+      "テスト工程を増やす",
+      "開発者のコードを監視する警察になる",
+      "インフラ担当になる"
+    ],
+    "answer": [
+      "「品質保証（Gatekeeper）」から「品質支援（Quality Assistance / Coach）」へ"
+    ],
+    "explanation": "チーム全体で品質を作り込むためのコーチングやツール整備を行う役割にシフトします。"
+  }
+]
