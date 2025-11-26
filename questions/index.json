@@ -4,91 +4,106 @@
       "path": "questions/ch1_general.json",
       "chapter": "第1章",
       "category": "一般",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 10
     },
     {
       "path": "questions/ch1_aws.json",
       "chapter": "第1章",
       "category": "AWS",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 6
     },
     {
       "path": "questions/ch1_finance.json",
       "chapter": "第1章",
       "category": "金融",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 6
     },
     {
       "path": "questions/ch1_cloud.json",
       "chapter": "第1章",
       "category": "クラウド",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch1_medical.json",
       "chapter": "第1章",
       "category": "医療",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch2_general.json",
       "chapter": "第2章",
       "category": "一般",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 10
     },
     {
       "path": "questions/ch2_aws.json",
       "chapter": "第2章",
       "category": "AWS",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch2_finance.json",
       "chapter": "第2章",
       "category": "金融",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch2_cloud.json",
       "chapter": "第2章",
       "category": "クラウド",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch2_medical.json",
       "chapter": "第2章",
       "category": "医療",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch3_general.json",
       "chapter": "第3章",
       "category": "一般",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 10
     },
     {
       "path": "questions/ch3_aws.json",
       "chapter": "第3章",
       "category": "AWS",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch3_finance.json",
       "chapter": "第3章",
       "category": "金融",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch3_cloud.json",
       "chapter": "第3章",
       "category": "クラウド",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     },
     {
       "path": "questions/ch3_medical.json",
       "chapter": "第3章",
       "category": "医療",
-      "klevel": "K2"
+      "klevel": "K2",
+      "qCount": 5
     }
   ]
 }

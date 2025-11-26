@@ -1,21 +1,97 @@
 [
   {
-    "id": "Q-CH2-AWS-001",
+    "id": "Q2-AWS-01",
     "chapter": "第2章",
     "level": "K2",
     "category": "AWS",
     "style": "用語",
     "type": "単一選択",
-    "question": "AWS環境での「静的テスト（レビュー）」の対象として適切なものはどれか。",
+    "question": "AWSでの静的テスト対象は？",
     "options": [
-      "IaCテンプレート（CloudFormation/Terraform）",
+      "IaCテンプレート",
       "CPU温度",
-      "警備体制",
-      "コンソールの配色"
+      "警備",
+      "配色"
     ],
     "answer": [
-      "IaCテンプレート（CloudFormation/Terraform）"
+      "IaCテンプレート"
     ],
-    "explanation": "インフラコードのレビューにより構成ミスを早期発見できます。"
+    "explanation": "CloudFormation等のコードレビューが重要。"
+  },
+  {
+    "id": "Q2-AWS-02",
+    "chapter": "第2章",
+    "level": "K3",
+    "category": "AWS",
+    "style": "シナリオ",
+    "type": "単一選択",
+    "question": "【背景】コスト超過。【課題】監視すべきメトリクスは？",
+    "options": [
+      "EC2のCPU使用率",
+      "未使用EBSボリュームやアイドル状態のRDS",
+      "社員の残業時間",
+      "コード行数"
+    ],
+    "answer": [
+      "未使用EBSボリュームやアイドル状態のRDS"
+    ],
+    "explanation": "無駄なリソースの特定（Trusted Advisor等）がコスト品質に関わります。"
+  },
+  {
+    "id": "Q2-AWS-03",
+    "chapter": "第2章",
+    "level": "K2",
+    "category": "AWS",
+    "style": "用語",
+    "type": "単一選択",
+    "question": "AWS Configを用いたテスト活動とは？",
+    "options": [
+      "手動での画面確認",
+      "構成変更の履歴管理とコンプライアンスルールの自動評価",
+      "負荷テスト",
+      "侵入テスト"
+    ],
+    "answer": [
+      "構成変更の履歴管理とコンプライアンスルールの自動評価"
+    ],
+    "explanation": "設定がポリシーに準拠しているかを継続的に監査します。"
+  },
+  {
+    "id": "Q2-AWS-04",
+    "chapter": "第2章",
+    "level": "K2",
+    "category": "AWS",
+    "style": "用語",
+    "type": "単一選択",
+    "question": "セキュリティグループ設定のレビュー観点は？",
+    "options": [
+      "全ポート開放(0.0.0.0/0)になっていないか",
+      "名前がかっこいいか",
+      "説明文が長いか",
+      "作成者"
+    ],
+    "answer": [
+      "全ポート開放(0.0.0.0/0)になっていないか"
+    ],
+    "explanation": "最小権限の原則に反する設定ミスを防ぎます。"
+  },
+  {
+    "id": "Q2-AWS-05",
+    "chapter": "第2章",
+    "level": "K2",
+    "category": "AWS",
+    "style": "用語",
+    "type": "単一選択",
+    "question": "S3バケットポリシーの欠陥例は？",
+    "options": [
+      "パブリックアクセスが意図せず許可されている",
+      "バケット名が短い",
+      "リージョンが東京",
+      "ログ保存"
+    ],
+    "answer": [
+      "パブリックアクセスが意図せず許可されている"
+    ],
+    "explanation": "情報漏洩の主因となる設定ミスです。"
   }
 ]
