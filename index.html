@@ -66,6 +66,10 @@
         <button id="startBtn" type="button">この条件で開始</button>
         <a class="secondary" href="#dashboard">過去の成績を見る（ダッシュボード）</a>
       </div>
+      
+      <p style="font-size: 0.9rem; color: #666; margin-top: 8px;">
+        ※問題数増加に伴い、初回読み込みに数秒かかる場合があります。ボタンを押してそのままお待ちください。
+      </p>
     </section>
 
     <section id="meta" class="hidden" data-route="quiz">
@@ -94,6 +98,9 @@
 
     <section id="results" class="hidden" data-route="results">
       <h2>結果</h2>
+      
+      <div id="passFailMessage" class="result-message"></div>
+
       <p>正答数：<span id="finalCorrect"></span> / <span id="totalQuestions"></span></p>
       <p>正答率：<span id="finalRate"></span>%</p>
 

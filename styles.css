@@ -32,6 +32,28 @@ section{margin-bottom:16px;}
   border: 1px solid #f5c6cb;
 }
 
+/* ★追加: 結果画面の合否メッセージ */
+.result-message {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 10px 0 20px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  border: 2px solid transparent;
+}
+.pass-msg {
+  color: #28a745;
+  border-color: #28a745;
+  background-color: #e6ffed;
+}
+.fail-msg {
+  color: #dc3545;
+  border-color: #dc3545;
+  background-color: #ffeef0;
+}
+
 form label{display:block;padding:8px;background:#fafafa;border-radius:6px;margin-bottom:8px;border:1px solid #eee;cursor:pointer} 
 form input{margin-right:8px;} 
 .nav{display:flex;gap:12px;margin-top:12px;} 
@@ -61,13 +83,11 @@ footer{margin-top:24px;color:#777;text-align:center;}
   flex-shrink: 0;
 }
 input:checked + .option-tag + .option-content { font-weight: bold; } 
-/* (注: CSSセレクタでラベル全体の色を変えるにはJS補助かhasが必要だが、簡易的にこれでも可) */
 
 #meta{position:sticky;top:0;z-index:100;background:#fff;} 
 .nav{position:sticky;bottom:0;z-index:90;background:#fff;border-top:1px solid #eee;padding:12px;} 
 canvas{max-width:100%;height:auto;} 
 
-/* ダッシュボードのカード */
 .cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
 .card { flex: 1; min-width: 250px; background: #f9f9f9; padding: 16px; border-radius: 8px; border: 1px solid #eee; }
 .card h3 { margin-top: 0; font-size: 1.1rem; color: #555; }
@@ -92,5 +112,8 @@ canvas{max-width:100%;height:auto;}
   #feedback { background-color: #2a2a2a; border-color: #444; }
   .option-tag { color: #000; }
   .retry-alert { background-color: #3e2c2c; border-color: #5c3838; color: #ff8888; }
+  .result-message { background-color: #2a2a2a; }
+  .pass-msg { color: #4caf50; border-color: #4caf50; background-color: #1e3320; }
+  .fail-msg { color: #f44336; border-color: #f44336; background-color: #3e2727; }
   footer { color: #999; }
 }

@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 テスト対策くん — 修正版v19
- * 対応: データ増加に伴う読み込み待機UIの実装（ローディング表示）
+ * JSTQB ALTM v3.0 テスト対策くん — 修正版v20
+ * 対応: 結果画面での合否判定（65%基準）とメッセージ表示の実装
  */
 
 // ====== 初期化・状態 ======
@@ -567,13 +567,11 @@ function submitAnswer() {
   }
 }
 
-// ====== 開始処理（修正版：ローディング表示対応） ======
-async function startWithFilters() {
+function startWithFilters() {
   const btn = document.getElementById('startBtn');
   const originalText = btn.textContent;
   
   try {
-    // ローディング状態へ
     btn.textContent = '読み込み中...';
     btn.disabled = true;
 
@@ -582,37 +580,35 @@ async function startWithFilters() {
     tempDetails = [];
     const cond = getCurrentConditionsFromUI();
     
-    const raw = await loadQuestionsByIndex(cond);
+    loadQuestionsByIndex(cond).then(raw => {
+      if (!raw || !raw.length) { 
+        alert('条件に合う問題が見つかりませんでした。'); 
+        return; 
+      }
+      
+      const filtered = raw.filter(q => matchesQuestion(q, cond));
+      if (!filtered.length) { 
+        alert('選択された条件に合致する問題がありませんでした。'); 
+        return; 
+      }
 
-    if (!raw || !raw.length) { 
-      alert('条件に合う問題が見つかりませんでした。'); 
-      return; 
-    }
-    
-    const filtered = raw.filter(q => matchesQuestion(q, cond));
-    if (!filtered.length) { 
-      alert('選択された条件に合致する問題がありませんでした。'); 
-      return; 
-    }
+      const shuffledAll = shuffleArray(filtered);
+      sessionQuestions = shuffledAll.slice(0, numToAsk);
+      sessionQuestions = sessionQuestions.map(q => randomizeQuestionOptions(q));
 
-    // シャッフルして抽出
-    const shuffledAll = shuffleArray(filtered);
-    const sampled = shuffledAll.slice(0, numToAsk);
-
-    // 選択肢もシャッフル
-    sessionQuestions = sampled.map(q => randomizeQuestionOptions(q));
-
-    showRoute('quiz');
-    renderQuestions(sessionQuestions);
-    
-    const scoreEl = document.getElementById('score');
-    if (scoreEl) scoreEl.textContent = '0';
+      showRoute('quiz');
+      renderQuestions(sessionQuestions);
+      
+      const scoreEl = document.getElementById('score');
+      if (scoreEl) scoreEl.textContent = '0';
+    }).finally(() => {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    });
 
   } catch (e) {
     console.error('Start Error:', e);
     alert('問題の読み込みに失敗しました。');
-  } finally {
-    // ボタンを元に戻す
     btn.textContent = originalText;
     btn.disabled = false;
   }
@@ -646,12 +642,23 @@ function finishSession() {
   const finalCorrect = document.getElementById('finalCorrect');
   const totalQuestions = document.getElementById('totalQuestions');
   const finalRate = document.getElementById('finalRate');
+  const msgEl = document.getElementById('passFailMessage');
   
+  const rate = totalQuestions ? Math.round((correctCount / sessionQuestions.length) * 100) : 0;
+
   if (finalCorrect) finalCorrect.textContent = correctCount;
   if (totalQuestions) totalQuestions.textContent = sessionQuestions.length;
-  if (finalRate) {
-    const rate = Math.round((correctCount / sessionQuestions.length) * 100);
-    finalRate.textContent = rate;
+  if (finalRate) finalRate.textContent = rate;
+  
+  // ★修正: 合否メッセージの表示
+  if (msgEl) {
+    if (rate >= 65) {
+      msgEl.textContent = "おめでとう！この調子でがんばりましょう！";
+      msgEl.className = "result-message pass-msg";
+    } else {
+      msgEl.textContent = "ざんねん…間違えた箇所の復習をしましょう";
+      msgEl.className = "result-message fail-msg";
+    }
   }
   
   renderDashboard();
