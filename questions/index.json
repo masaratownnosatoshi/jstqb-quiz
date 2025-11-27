@@ -435,6 +435,20 @@
       "qCount": 8
     },
     {
+      "path": "questions/ch1_general_vol41.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch1_general_vol42.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
       "path": "questions/ch1_general_vol5.json",
       "chapter": "第1章",
       "category": "一般",
@@ -813,6 +827,20 @@
       "qCount": 2
     },
     {
+      "path": "questions/ch2_general_vol41.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_general_vol42.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
       "path": "questions/ch2_general_vol5.json",
       "chapter": "第2章",
       "category": "一般",
@@ -929,6 +957,20 @@
       "chapter": "第2章",
       "category": "医療",
       "klevel": "K4",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_medical_vol41.json",
+      "chapter": "第2章",
+      "category": "医療",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_medical_vol42.json",
+      "chapter": "第2章",
+      "category": "医療",
+      "klevel": "K3",
       "qCount": 1
     },
     {
@@ -1059,6 +1101,20 @@
     },
     {
       "path": "questions/ch3_cloud_vol3.json",
+      "chapter": "第3章",
+      "category": "クラウド",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_cloud_vol41.json",
+      "chapter": "第3章",
+      "category": "クラウド",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_cloud_vol42.json",
       "chapter": "第3章",
       "category": "クラウド",
       "klevel": "K3",
