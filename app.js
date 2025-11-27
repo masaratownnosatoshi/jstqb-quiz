@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 テスト対策くん — 修正版v20
- * 対応: 結果画面での合否判定（65%基準）とメッセージ表示の実装
+ * JSTQB ALTM v3.0 テスト対策くん — 修正版v21
+ * 対応: 【計算】問題のみモードの実装
  */
 
 // ====== 初期化・状態 ======
@@ -360,7 +360,16 @@ function collectFilters() {
   return { chapters, levels, cats };
 }
 
+// ====== フィルタ判定ロジック（計算モード追加） ======
 function matchesQuestion(q, cond) {
+  // ★追加: 計算問題のみモード
+  if (cond.calcOnly) {
+    // 問題文に【計算】が含まれていないなら除外
+    if (!q.question || !q.question.includes('【計算】')) {
+      return false;
+    }
+  }
+
   if (cond.chapters && cond.chapters.length > 0) {
     const qCh = (q.chapter || '').trim();
     if (!cond.chapters.some(sel => sel === qCh)) return false;
@@ -567,7 +576,8 @@ function submitAnswer() {
   }
 }
 
-function startWithFilters() {
+// ====== 開始処理（修正：計算モード判定追加） ======
+async function startWithFilters() {
   const btn = document.getElementById('startBtn');
   const originalText = btn.textContent;
   
@@ -580,35 +590,32 @@ function startWithFilters() {
     tempDetails = [];
     const cond = getCurrentConditionsFromUI();
     
-    loadQuestionsByIndex(cond).then(raw => {
-      if (!raw || !raw.length) { 
-        alert('条件に合う問題が見つかりませんでした。'); 
-        return; 
-      }
-      
-      const filtered = raw.filter(q => matchesQuestion(q, cond));
-      if (!filtered.length) { 
-        alert('選択された条件に合致する問題がありませんでした。'); 
-        return; 
-      }
+    const raw = await loadQuestionsByIndex(cond);
 
-      const shuffledAll = shuffleArray(filtered);
-      sessionQuestions = shuffledAll.slice(0, numToAsk);
-      sessionQuestions = sessionQuestions.map(q => randomizeQuestionOptions(q));
+    if (!raw || !raw.length) { 
+      alert('条件に合う問題が見つかりませんでした。'); 
+      return; 
+    }
+    
+    const filtered = raw.filter(q => matchesQuestion(q, cond));
+    if (!filtered.length) { 
+      alert('選択された条件に合致する問題がありませんでした。\n（計算問題がないカテゴリかもしれません）'); 
+      return; 
+    }
 
-      showRoute('quiz');
-      renderQuestions(sessionQuestions);
-      
-      const scoreEl = document.getElementById('score');
-      if (scoreEl) scoreEl.textContent = '0';
-    }).finally(() => {
-      btn.textContent = originalText;
-      btn.disabled = false;
-    });
+    const shuffledAll = shuffleArray(filtered);
+    sessionQuestions = shuffledAll.slice(0, numToAsk);
+    sessionQuestions = sessionQuestions.map(q => randomizeQuestionOptions(q));
 
+    showRoute('quiz');
+    renderQuestions(sessionQuestions);
+    
+    const scoreEl = document.getElementById('score');
+    if (scoreEl) scoreEl.textContent = '0';
   } catch (e) {
     console.error('Start Error:', e);
     alert('問題の読み込みに失敗しました。');
+  } finally {
     btn.textContent = originalText;
     btn.disabled = false;
   }
@@ -616,10 +623,14 @@ function startWithFilters() {
 
 function getCurrentConditionsFromUI() {
   const f = collectFilters();
+  // ★追加: 計算モードのチェック状態を取得
+  const calcOnly = document.getElementById('calcOnlyMode')?.checked || false;
+
   const cond = {
     chapters: f.chapters, 
     categories: f.cats,
     klevels: f.levels,
+    calcOnly: calcOnly, // 条件に追加
   };
   const countEl = document.getElementById('numSelect'); 
   if (countEl && countEl.value) {
@@ -650,7 +661,6 @@ function finishSession() {
   if (totalQuestions) totalQuestions.textContent = sessionQuestions.length;
   if (finalRate) finalRate.textContent = rate;
   
-  // ★修正: 合否メッセージの表示
   if (msgEl) {
     if (rate >= 65) {
       msgEl.textContent = "おめでとう！この調子でがんばりましょう！";
