@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 テスト対策くん — 修正版v18
- * 対応: 選択肢の並び順をランダム化（正解データの追従対応）
+ * JSTQB ALTM v3.0 テスト対策くん — 修正版v19
+ * 対応: データ増加に伴う読み込み待機UIの実装（ローディング表示）
  */
 
 // ====== 初期化・状態 ======
@@ -99,6 +99,7 @@ function getActiveUserId() {
   return anon;
 }
 
+// 集合比較（安全版）
 function eqSetCompat(selectedArr, correctArr) {
   if (!Array.isArray(selectedArr) || !Array.isArray(correctArr)) return false;
   if (selectedArr.length !== correctArr.length) return false;
@@ -111,7 +112,6 @@ function eqSetCompat(selectedArr, correctArr) {
   return true;
 }
 
-// 配列シャッフル
 function shuffleArray(array) {
   const res = array.slice();
   for (let i = res.length - 1; i > 0; i--) {
@@ -121,46 +121,34 @@ function shuffleArray(array) {
   return res;
 }
 
-// ★追加: 問題の選択肢をランダム化し、正解インデックスを再計算して返す
+// 選択肢ランダム化＆正解インデックス追従
 function randomizeQuestionOptions(q) {
-  // 元の選択肢配列を取得
   const originalOpts = q.options || q.choices || [];
   if (originalOpts.length === 0) return q;
 
-  // 正解データを「元の選択肢のインデックス」のSetに変換
   let correctOriginalIndices = new Set();
   let rawAns = Array.isArray(q.answer) ? q.answer : (q.answer !== undefined ? [q.answer] : []);
 
   if (rawAns.length > 0 && typeof rawAns[0] === 'string') {
-    // 文字列指定の場合、元の選択肢からインデックスを探す
     rawAns.forEach(ansStr => {
       const idx = originalOpts.findIndex(o => String(o).trim() === String(ansStr).trim());
       if (idx !== -1) correctOriginalIndices.add(idx);
     });
   } else {
-    // 数値指定の場合
     rawAns.forEach(idx => correctOriginalIndices.add(parseInt(idx, 10)));
   }
 
-  // シャッフル用のペア配列作成 [{text: "選択肢文言", isCorrect: true/false}, ...]
   let items = originalOpts.map((text, index) => ({
     text: text,
     isCorrect: correctOriginalIndices.has(index)
   }));
 
-  // シャッフル
   items = shuffleArray(items);
 
-  // 新しい質問オブジェクトを作成（元のqを汚染しないようコピー）
   let newQ = { ...q };
-  
-  // optionsをシャッフル後のテキスト配列に更新
   newQ.options = items.map(i => i.text);
-  // choicesプロパティがあれば削除（混乱防止）
   if (newQ.choices) delete newQ.choices;
 
-  // answerを「新しい配列内でのインデックス」に更新
-  // (isCorrectがtrueのもののインデックスを集める)
   newQ.answer = items
     .map((item, index) => item.isCorrect ? index : -1)
     .filter(idx => idx !== -1);
@@ -499,20 +487,21 @@ function submitAnswer() {
       return;
     }
 
-    // 表示されている選択肢（opts）はシャッフル後のもの
     let opts = [];
     if (Array.isArray(q.options)) opts = q.options;
     else if (Array.isArray(q.choices)) opts = q.choices;
 
-    // q.answer は randomizeQuestionOptions ですでに
-    // 「シャッフル後の配列における正解インデックス」に変換済み。
-    // なので、単純に比較するだけでOK。
-    
     let correctIndices = [];
-    if (Array.isArray(q.answer)) {
-      correctIndices = q.answer.map(v => parseInt(v, 10));
-    } else if (q.answer !== undefined) {
-      correctIndices = [parseInt(q.answer, 10)];
+    let rawAnswer = [];
+    if (Array.isArray(q.answer)) rawAnswer = q.answer;
+    else if (q.answer !== undefined) rawAnswer = [q.answer];
+
+    if (rawAnswer.length > 0 && typeof rawAnswer[0] === 'string') {
+      correctIndices = rawAnswer.map(ansStr => {
+        return opts.findIndex(opt => String(opt).trim() === String(ansStr).trim());
+      }).filter(idx => idx !== -1);
+    } else {
+      correctIndices = rawAnswer.map(v => parseInt(v, 10));
     }
     correctIndices.sort((a, b) => a - b);
 
@@ -524,8 +513,6 @@ function submitAnswer() {
       if (scoreEl) scoreEl.textContent = correctCount;
     }
     
-    // stats変数は廃止済みのため更新処理はなし（履歴から集計）
-
     if (judgeEl) {
       if (ok) {
         judgeEl.textContent = '正解！';
@@ -536,7 +523,6 @@ function submitAnswer() {
     }
     }
 
-    // 正解ラベル(A, B...)とテキストを表示
     const correctLabels = correctIndices.map(i => OPTION_LABELS[i] || '?').join(', ');
     const correctTextFull = correctIndices.map(i => opts[i] || '').join('<br>');
 
@@ -581,13 +567,23 @@ function submitAnswer() {
   }
 }
 
-function startWithFilters() {
-  current = 0; 
-  correctCount = 0; 
-  tempDetails = [];
-  const cond = getCurrentConditionsFromUI();
+// ====== 開始処理（修正版：ローディング表示対応） ======
+async function startWithFilters() {
+  const btn = document.getElementById('startBtn');
+  const originalText = btn.textContent;
   
-  loadQuestionsByIndex(cond).then(raw => {
+  try {
+    // ローディング状態へ
+    btn.textContent = '読み込み中...';
+    btn.disabled = true;
+
+    current = 0; 
+    correctCount = 0; 
+    tempDetails = [];
+    const cond = getCurrentConditionsFromUI();
+    
+    const raw = await loadQuestionsByIndex(cond);
+
     if (!raw || !raw.length) { 
       alert('条件に合う問題が見つかりませんでした。'); 
       return; 
@@ -599,11 +595,11 @@ function startWithFilters() {
       return; 
     }
 
-    // 1. まず問題をシャッフルして抽出
+    // シャッフルして抽出
     const shuffledAll = shuffleArray(filtered);
     const sampled = shuffledAll.slice(0, numToAsk);
 
-    // 2. ★修正: 各問題の「選択肢」もシャッフル
+    // 選択肢もシャッフル
     sessionQuestions = sampled.map(q => randomizeQuestionOptions(q));
 
     showRoute('quiz');
@@ -611,7 +607,15 @@ function startWithFilters() {
     
     const scoreEl = document.getElementById('score');
     if (scoreEl) scoreEl.textContent = '0';
-  });
+
+  } catch (e) {
+    console.error('Start Error:', e);
+    alert('問題の読み込みに失敗しました。');
+  } finally {
+    // ボタンを元に戻す
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 }
 
 function getCurrentConditionsFromUI() {
