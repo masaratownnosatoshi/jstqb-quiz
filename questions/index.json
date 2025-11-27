@@ -449,6 +449,20 @@
       "qCount": 1
     },
     {
+      "path": "questions/ch1_general_vol43.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch1_general_vol44.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K4",
+      "qCount": 2
+    },
+    {
       "path": "questions/ch1_general_vol5.json",
       "chapter": "第1章",
       "category": "一般",
@@ -838,6 +852,20 @@
       "chapter": "第2章",
       "category": "一般",
       "klevel": "K3",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol43.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K4",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol44.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K4",
       "qCount": 2
     },
     {
