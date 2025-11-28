@@ -1,6 +1,6 @@
 /*!
- * JSTQB ALTM v3.0 テスト対策くん — 修正版v21
- * 対応: 【計算】問題のみモードの実装
+ * JSTQB ALTM v3.0 テスト対策くん — 修正版v22
+ * 対応: お気に入り機能（保存・読み込み・フィルタリング）の実装
  */
 
 // ====== 初期化・状態 ======
@@ -17,11 +17,15 @@ let dbChartChapter = null;
 let dbChartKLevel = null;
 
 let tempDetails = []; // セッション履歴
+let favorites = [];   // ★追加: お気に入りリスト（問題IDの配列）
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
 document.addEventListener('DOMContentLoaded', () => {
   try {
+    // お気に入りデータのロード
+    loadFavorites();
+
     let r = location.hash.replace('#', '');
     if (!r) r = 'home';
     showRoute(r);
@@ -32,6 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
     onClick('#restartBtn', restart);
     onClick('#goHomeBtn', goHome);
     onClick('#clearDataBtn', clearLocalData);
+    
+    // ★追加: お気に入りボタンのイベント
+    onClick('#favBtn', toggleFavorite);
 
     window.addEventListener('hashchange', () => {
       let route = location.hash.replace('#', '');
@@ -121,7 +128,6 @@ function shuffleArray(array) {
   return res;
 }
 
-// 選択肢ランダム化＆正解インデックス追従
 function randomizeQuestionOptions(q) {
   const originalOpts = q.options || q.choices || [];
   if (originalOpts.length === 0) return q;
@@ -168,6 +174,51 @@ function resolveRepoUrl(input) {
   return new URL(input, base).href;
 }
 
+// ====== お気に入り機能 ======
+function loadFavorites() {
+  try {
+    const stored = localStorage.getItem('altm_favorites');
+    favorites = stored ? JSON.parse(stored) : [];
+  } catch (e) {
+    console.error('Favorites load error', e);
+    favorites = [];
+  }
+}
+
+function saveFavorites() {
+  localStorage.setItem('altm_favorites', JSON.stringify(favorites));
+}
+
+function toggleFavorite() {
+  const q = sessionQuestions[current];
+  if (!q || !q.id) return;
+
+  const index = favorites.indexOf(q.id);
+  if (index === -1) {
+    favorites.push(q.id);
+  } else {
+    favorites.splice(index, 1);
+  }
+  saveFavorites();
+  
+  // ボタンの状態更新
+  updateFavButtonState(q.id);
+}
+
+function updateFavButtonState(qId) {
+  const btn = document.getElementById('favBtn');
+  if (!btn) return;
+  
+  if (favorites.includes(qId)) {
+    btn.classList.add('active');
+    btn.textContent = '★'; // 塗りつぶし星
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '☆'; // 白抜き星
+  }
+}
+
+
 // ====== 履歴・DB関連 ======
 function pushTempDetail(q, ok) {
   tempDetails.push({ 
@@ -203,11 +254,15 @@ function saveHistory(user, session) {
 }
 
 function clearLocalData() {
-  if (!confirm("学習履歴をすべて削除しますか？\n（グラフや正答率がリセットされます）")) return;
+  if (!confirm("学習履歴とお気に入りをすべて削除しますか？\n（グラフや正答率がリセットされます）")) return;
   const user = getActiveUserId();
-  const key = 'altm_history_' + (user || 'guest');
-  localStorage.removeItem(key);
+  const histKey = 'altm_history_' + (user || 'guest');
+  localStorage.removeItem(histKey);
   
+  // お気に入りも消す場合
+  localStorage.removeItem('altm_favorites');
+  favorites = [];
+
   if (dbChartChapter) dbChartChapter.destroy();
   if (dbChartKLevel) dbChartKLevel.destroy();
   
@@ -360,11 +415,16 @@ function collectFilters() {
   return { chapters, levels, cats };
 }
 
-// ====== フィルタ判定ロジック（計算モード追加） ======
+// ====== フィルタ判定（お気に入り対応） ======
 function matchesQuestion(q, cond) {
-  // ★追加: 計算問題のみモード
+  // お気に入りモード
+  if (cond.favOnly) {
+    // IDがfavorites配列になければ除外
+    if (!favorites.includes(q.id)) return false;
+  }
+
+  // 計算モード
   if (cond.calcOnly) {
-    // 問題文に【計算】が含まれていないなら除外
     if (!q.question || !q.question.includes('【計算】')) {
       return false;
     }
@@ -420,6 +480,9 @@ function renderQuestions(questions) {
     badge.textContent = '以前間違えた問題です';
     textEl.parentNode.insertBefore(badge, textEl);
   }
+
+  // お気に入りボタンの更新
+  updateFavButtonState(q.id);
 
   const qText = q.question || q.text || q.title || '(問題文)';
   if (textEl) textEl.textContent = qText;
@@ -576,8 +639,7 @@ function submitAnswer() {
   }
 }
 
-// ====== 開始処理（修正：計算モード判定追加） ======
-async function startWithFilters() {
+function startWithFilters() {
   const btn = document.getElementById('startBtn');
   const originalText = btn.textContent;
   
@@ -590,32 +652,35 @@ async function startWithFilters() {
     tempDetails = [];
     const cond = getCurrentConditionsFromUI();
     
-    const raw = await loadQuestionsByIndex(cond);
+    loadQuestionsByIndex(cond).then(raw => {
+      if (!raw || !raw.length) { 
+        alert('条件に合う問題が見つかりませんでした。'); 
+        return; 
+      }
+      
+      const filtered = raw.filter(q => matchesQuestion(q, cond));
+      if (!filtered.length) { 
+        alert('選択された条件に合致する問題がありませんでした。\n（お気に入りがない、または計算問題がないカテゴリかもしれません）'); 
+        return; 
+      }
 
-    if (!raw || !raw.length) { 
-      alert('条件に合う問題が見つかりませんでした。'); 
-      return; 
-    }
-    
-    const filtered = raw.filter(q => matchesQuestion(q, cond));
-    if (!filtered.length) { 
-      alert('選択された条件に合致する問題がありませんでした。\n（計算問題がないカテゴリかもしれません）'); 
-      return; 
-    }
+      const shuffledAll = shuffleArray(filtered);
+      sessionQuestions = shuffledAll.slice(0, numToAsk);
+      sessionQuestions = sessionQuestions.map(q => randomizeQuestionOptions(q));
 
-    const shuffledAll = shuffleArray(filtered);
-    sessionQuestions = shuffledAll.slice(0, numToAsk);
-    sessionQuestions = sessionQuestions.map(q => randomizeQuestionOptions(q));
+      showRoute('quiz');
+      renderQuestions(sessionQuestions);
+      
+      const scoreEl = document.getElementById('score');
+      if (scoreEl) scoreEl.textContent = '0';
+    }).finally(() => {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    });
 
-    showRoute('quiz');
-    renderQuestions(sessionQuestions);
-    
-    const scoreEl = document.getElementById('score');
-    if (scoreEl) scoreEl.textContent = '0';
   } catch (e) {
     console.error('Start Error:', e);
     alert('問題の読み込みに失敗しました。');
-  } finally {
     btn.textContent = originalText;
     btn.disabled = false;
   }
@@ -623,14 +688,16 @@ async function startWithFilters() {
 
 function getCurrentConditionsFromUI() {
   const f = collectFilters();
-  // ★追加: 計算モードのチェック状態を取得
   const calcOnly = document.getElementById('calcOnlyMode')?.checked || false;
+  // ★追加: お気に入りチェック
+  const favOnly = document.getElementById('favOnlyMode')?.checked || false;
 
   const cond = {
     chapters: f.chapters, 
     categories: f.cats,
     klevels: f.levels,
-    calcOnly: calcOnly, // 条件に追加
+    calcOnly: calcOnly,
+    favOnly: favOnly, // 渡す
   };
   const countEl = document.getElementById('numSelect'); 
   if (countEl && countEl.value) {

@@ -19,11 +19,33 @@ section{margin-bottom:16px;}
   white-space: pre-wrap;
 } 
 
-/* ★追加: 以前間違えた問題のアラート表示 */
+/* ★追加: お気に入りボタンのスタイル */
+.fav-btn {
+  position: absolute;
+  top: -5px;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #ccc; /* 通常はグレー */
+  transition: color 0.2s, transform 0.1s;
+  padding: 0;
+  line-height: 1;
+  z-index: 10;
+}
+.fav-btn:hover {
+  transform: scale(1.1);
+}
+.fav-btn.active {
+  color: #ffc107; /* お気に入り時は金色 */
+  text-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
 .retry-alert {
   font-size: 0.85rem;
-  color: #d9534f; /* 赤系 */
-  background-color: #fcefdc; /* 薄いオレンジ */
+  color: #d9534f; 
+  background-color: #fcefdc;
   padding: 4px 8px;
   border-radius: 4px;
   display: inline-block;
@@ -32,7 +54,6 @@ section{margin-bottom:16px;}
   border: 1px solid #f5c6cb;
 }
 
-/* ★追加: 結果画面の合否メッセージ */
 .result-message {
   text-align: center;
   font-size: 1.5rem;
@@ -52,6 +73,13 @@ section{margin-bottom:16px;}
   color: #dc3545;
   border-color: #dc3545;
   background-color: #ffeef0;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
 }
 
 form label{display:block;padding:8px;background:#fafafa;border-radius:6px;margin-bottom:8px;border:1px solid #eee;cursor:pointer} 
@@ -101,6 +129,7 @@ canvas{max-width:100%;height:auto;}
   form label { padding: 12px; font-size: 1rem; }
   #chapter, #level { font-size: .95rem; }
   header h1 { font-size: 1.3rem; }
+  .fav-btn { font-size: 1.8rem; top: -3px; }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -115,5 +144,8 @@ canvas{max-width:100%;height:auto;}
   .result-message { background-color: #2a2a2a; }
   .pass-msg { color: #4caf50; border-color: #4caf50; background-color: #1e3320; }
   .fail-msg { color: #f44336; border-color: #f44336; background-color: #3e2727; }
+  /* ダークモード時のスター色調整 */
+  .fav-btn { color: #555; } 
+  .fav-btn.active { color: #ffeb3b; }
   footer { color: #999; }
 }
