@@ -582,6 +582,62 @@
       "qCount": 2
     },
     {
+      "path": "questions/ch1_general_vol62.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 4
+    },
+    {
+      "path": "questions/ch1_general_vol63.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 4
+    },
+    {
+      "path": "questions/ch1_general_vol64.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch1_general_vol65.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch1_general_vol66.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch1_general_vol67.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch1_general_vol68.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch1_general_vol69.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 4
+    },
+    {
       "path": "questions/ch1_general_vol7.json",
       "chapter": "第1章",
       "category": "一般",
@@ -646,6 +702,13 @@
     },
     {
       "path": "questions/ch1_medical_vol60.json",
+      "chapter": "第1章",
+      "category": "医療",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch1_medical_vol69.json",
       "chapter": "第1章",
       "category": "医療",
       "klevel": "K2",
@@ -737,6 +800,13 @@
     },
     {
       "path": "questions/ch2_cloud_vol54.json",
+      "chapter": "第2章",
+      "category": "クラウド",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_cloud_vol69.json",
       "chapter": "第2章",
       "category": "クラウド",
       "klevel": "K2",
@@ -1140,6 +1210,62 @@
       "category": "一般",
       "klevel": "K4",
       "qCount": 1
+    },
+    {
+      "path": "questions/ch2_general_vol62.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol63.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_general_vol64.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch2_general_vol65.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol66.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_general_vol67.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol68.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol69.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 4
     },
     {
       "path": "questions/ch2_general_vol7.json",
@@ -1777,6 +1903,27 @@
       "category": "一般",
       "klevel": "K2",
       "qCount": 1
+    },
+    {
+      "path": "questions/ch3_general_vol63.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_general_vol68.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_general_vol69.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 2
     },
     {
       "path": "questions/ch3_general_vol7.json",
