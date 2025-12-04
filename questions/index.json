@@ -92,6 +92,20 @@
       "qCount": 1
     },
     {
+      "path": "questions/ch1_aws_vol70_2.json",
+      "chapter": "第1章",
+      "category": "AWS",
+      "klevel": "K3",
+      "qCount": 4
+    },
+    {
+      "path": "questions/ch1_aws_vol78.json",
+      "chapter": "第1章",
+      "category": "AWS",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
       "path": "questions/ch1_aws_vol8.json",
       "chapter": "第1章",
       "category": "AWS",
@@ -216,6 +230,41 @@
       "category": "金融",
       "klevel": "K4",
       "qCount": 2
+    },
+    {
+      "path": "questions/ch1_finance_vol73.json",
+      "chapter": "第1章",
+      "category": "金融",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch1_finance_vol74.json",
+      "chapter": "第1章",
+      "category": "金融",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch1_finance_vol75.json",
+      "chapter": "第1章",
+      "category": "金融",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch1_finance_vol76.json",
+      "chapter": "第1章",
+      "category": "金融",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch1_finance_vol78.json",
+      "chapter": "第1章",
+      "category": "金融",
+      "klevel": "K3",
+      "qCount": 1
     },
     {
       "path": "questions/ch1_finance_vol9.json",
@@ -645,6 +694,76 @@
       "qCount": 3
     },
     {
+      "path": "questions/ch1_general_vol70.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch1_general_vol70_2.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 6
+    },
+    {
+      "path": "questions/ch1_general_vol71.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch1_general_vol72.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch1_general_vol73.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch1_general_vol74.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch1_general_vol75.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch1_general_vol76.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 4
+    },
+    {
+      "path": "questions/ch1_general_vol77.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch1_general_vol78.json",
+      "chapter": "第1章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
       "path": "questions/ch1_general_vol8.json",
       "chapter": "第1章",
       "category": "一般",
@@ -715,6 +834,27 @@
       "qCount": 1
     },
     {
+      "path": "questions/ch1_medical_vol70_2.json",
+      "chapter": "第1章",
+      "category": "医療",
+      "klevel": "K3",
+      "qCount": 4
+    },
+    {
+      "path": "questions/ch1_medical_vol77.json",
+      "chapter": "第1章",
+      "category": "医療",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch1_medical_vol78.json",
+      "chapter": "第1章",
+      "category": "医療",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
       "path": "questions/ch2_aws.json",
       "chapter": "第2章",
       "category": "AWS",
@@ -755,6 +895,34 @@
       "category": "AWS",
       "klevel": "K3",
       "qCount": 2
+    },
+    {
+      "path": "questions/ch2_aws_vol73.json",
+      "chapter": "第2章",
+      "category": "AWS",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_aws_vol74.json",
+      "chapter": "第2章",
+      "category": "AWS",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_aws_vol76.json",
+      "chapter": "第2章",
+      "category": "AWS",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_aws_vol77.json",
+      "chapter": "第2章",
+      "category": "AWS",
+      "klevel": "K3",
+      "qCount": 1
     },
     {
       "path": "questions/ch2_cloud.json",
@@ -867,6 +1035,13 @@
       "category": "金融",
       "klevel": "K4",
       "qCount": 1
+    },
+    {
+      "path": "questions/ch2_finance_vol70_2.json",
+      "chapter": "第2章",
+      "category": "金融",
+      "klevel": "K3",
+      "qCount": 4
     },
     {
       "path": "questions/ch2_general.json",
@@ -1275,6 +1450,90 @@
       "qCount": 2
     },
     {
+      "path": "questions/ch2_general_vol70.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol70_2.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 4
+    },
+    {
+      "path": "questions/ch2_general_vol71.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_general_vol71_2.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_general_vol72.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K2",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_general_vol72_2.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_general_vol73.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch2_general_vol74.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol75.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol76.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 3
+    },
+    {
+      "path": "questions/ch2_general_vol77.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K4",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch2_general_vol78.json",
+      "chapter": "第2章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 4
+    },
+    {
       "path": "questions/ch2_general_vol8.json",
       "chapter": "第2章",
       "category": "一般",
@@ -1401,6 +1660,20 @@
       "qCount": 1
     },
     {
+      "path": "questions/ch2_medical_vol74.json",
+      "chapter": "第2章",
+      "category": "医療",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch2_medical_vol75.json",
+      "chapter": "第2章",
+      "category": "医療",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
       "path": "questions/ch2_medical_vol8.json",
       "chapter": "第2章",
       "category": "医療",
@@ -1461,6 +1734,13 @@
       "chapter": "第3章",
       "category": "AWS",
       "klevel": "K4",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_aws_vol75.json",
+      "chapter": "第3章",
+      "category": "AWS",
+      "klevel": "K3",
       "qCount": 1
     },
     {
@@ -1573,6 +1853,20 @@
       "chapter": "第3章",
       "category": "クラウド",
       "klevel": "K4",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_cloud_vol70_2.json",
+      "chapter": "第3章",
+      "category": "クラウド",
+      "klevel": "K3",
+      "qCount": 6
+    },
+    {
+      "path": "questions/ch3_cloud_vol78.json",
+      "chapter": "第3章",
+      "category": "クラウド",
+      "klevel": "K3",
       "qCount": 1
     },
     {
@@ -1931,6 +2225,48 @@
       "category": "一般",
       "klevel": "K4",
       "qCount": 2
+    },
+    {
+      "path": "questions/ch3_general_vol70.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_general_vol70_2.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch3_general_vol73.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_general_vol76.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 2
+    },
+    {
+      "path": "questions/ch3_general_vol77.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 1
+    },
+    {
+      "path": "questions/ch3_general_vol78.json",
+      "chapter": "第3章",
+      "category": "一般",
+      "klevel": "K3",
+      "qCount": 1
     },
     {
       "path": "questions/ch3_general_vol8.json",

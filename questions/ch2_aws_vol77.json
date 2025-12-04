@@ -1,0 +1,21 @@
+[
+  {
+    "id": "Q2-AWS-V77-01",
+    "chapter": "第2章",
+    "level": "K3",
+    "category": "AWS",
+    "style": "シナリオ",
+    "type": "単一選択",
+    "question": "【適用】AWS構成のテスト。\n「S3バケットが誤って公開されていないか」を継続的に監視・テストしたい。\n利用すべきAWSサービスと運用は？",
+    "options": [
+      "毎日手動で設定画面を目視確認する",
+      "AWS Configルール（s3-bucket-public-read-prohibited等）を有効化し、非準拠が検知されたら自動修復またはアラート通知を行う",
+      "S3を使わない",
+      "侵入テストを毎日行う"
+    ],
+    "answer": [
+      "AWS Configルール（s3-bucket-public-read-prohibited等）を有効化し、非準拠が検知されたら自動修復またはアラート通知を行う"
+    ],
+    "explanation": "【解説】\nクラウドの構成管理テストには、自動化されたコンプライアンスチェック（AWS Config等）が最適です。"
+  }
+]
