@@ -10,8 +10,8 @@
     "options": [
       "A:故障, B:偽陽性(False Positive), C:報告をためらう, D:偽陰性(False Negative / バグの見逃し)",
       "A:欠陥, B:偽陰性(False Negative), C:報告を乱発する, D:偽陽性(False Positive)",
-      "A:故障, B:バグ, C:喜ぶ, D:カバレッジ",
-      "A:インシデント, B:仕様変更, C:無視する, D:工数"
+      "A:故障, B:過検出(Overkill), C:楽観視する, D:テスト工数",
+      "A:インシデント, B:仕様変更, C:無視する, D:手戻り"
     ],
     "answer": [
       "A:故障, B:偽陽性(False Positive), C:報告をためらう, D:偽陰性(False Negative / バグの見逃し)"

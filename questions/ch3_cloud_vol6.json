@@ -8,13 +8,13 @@
     "type": "単一選択",
     "question": "クラウドネイティブ開発におけるQA（Quality Assurance）の役割変化は？",
     "options": [
-      "「品質保証（Gatekeeper）」から「品質支援（Quality Assistance / Coach）」へ",
-      "テスト工程を増やす",
-      "開発者のコードを監視する警察になる",
-      "インフラ担当になる"
+      "「品質保証（Gatekeeper）」から「品質支援（Quality Assistance / Coach）」へシフトし、開発者がテストできる環境を整える",
+      "テスト工程を増やし、開発者から納品されたコードを厳格に検査する「門番」としての権限を強化する",
+      "インフラ構築作業をすべて引き受け、SREチームに統合される",
+      "開発者の生産性を監視し、コード行数で評価する管理者になる"
     ],
     "answer": [
-      "「品質保証（Gatekeeper）」から「品質支援（Quality Assistance / Coach）」へ"
+      "「品質保証（Gatekeeper）」から「品質支援（Quality Assistance / Coach）」へシフトし、開発者がテストできる環境を整える"
     ],
     "explanation": "チーム全体で品質を作り込むためのコーチングやツール整備を行う役割にシフトします。"
   }

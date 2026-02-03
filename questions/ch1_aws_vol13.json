@@ -8,13 +8,13 @@
     "type": "単一選択",
     "question": "AWSにおける「CloudTrail」と「CloudWatch」の使い分けとして正しいものは？",
     "options": [
-      "CloudTrailはリソースの死活監視、CloudWatchはAPI操作ログの記録",
-      "CloudTrailはAPI操作ログ（誰が何をしたか）の記録、CloudWatchはメトリクス（CPU使用率等）の監視",
-      "両方とも同じ機能",
-      "CloudTrailはログ保存、CloudWatchは動画配信"
+      "CloudTrailはリソースの構成変更履歴（AWS Config）を記録し、CloudWatchは課金情報を管理する",
+      "CloudTrailはAPI操作ログ（誰がいつ何をしたか）の記録、CloudWatchはメトリクス（CPU使用率等）の監視とログ収集",
+      "CloudTrailはVPC内の通信パケット（Flow Logs）をキャプチャし、CloudWatchは侵入検知を行う",
+      "CloudTrailはアプリケーションのログ専用、CloudWatchはインフラのログ専用である"
     ],
     "answer": [
-      "CloudTrailはAPI操作ログ（誰が何をしたか）の記録、CloudWatchはメトリクス（CPU使用率等）の監視"
+      "CloudTrailはAPI操作ログ（誰がいつ何をしたか）の記録、CloudWatchはメトリクス（CPU使用率等）の監視とログ収集"
     ],
     "explanation": "【ひっかけ】名前が似ていますが役割が逆です。\n・Trail（足跡）＝監査ログ\n・Watch（時計/監視）＝モニタリング"
   },

@@ -8,13 +8,13 @@
     "type": "単一選択",
     "question": "DevOpsチームにおける「QA」の役割は？",
     "options": [
-      "Quality Assurance（品質を保証する人）",
-      "Quality Assistant / Coach（品質作り込みを支援する人）",
-      "Quick Actor（素早く動く人）",
-      "Quiet Admin（静かな管理者）"
+      "Quality Assurance（品質を保証する人：最後の砦としてリリースを承認する）",
+      "Quality Assistant / Coach（品質作り込みを支援する人：開発者がテストできるよう導く）",
+      "Quality Analyst（バグの統計データのみを分析し、現場には関与しない人）",
+      "Quality Police（コーディング規約違反を取り締まる人）"
     ],
     "answer": [
-      "Quality Assistant / Coach（品質作り込みを支援する人）"
+      "Quality Assistant / Coach（品質作り込みを支援する人：開発者がテストできるよう導く）"
     ],
     "explanation": "【ひっかけ】DevOpsではQAの意味が「保証（最後の砦）」から「支援（チーム全体の能力向上）」へとパラダイムシフトしています。"
   }
