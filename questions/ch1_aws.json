@@ -87,7 +87,7 @@
       "本番環境に近いステージング環境でランダムにサーバーを停止させ、システムの自己修復能力を確認する",
       "本番環境での障害注入による回復性検証（Resiliency Testing）",
       "カオス理論に基づき、テストデータの組み合わせを数理的に最適化する",
-      "開発チームと運用チームの役割を入れ替え、組織的な対応力を試す"
+      "統計的なばらつき"
     ],
     "answer": [
       "本番環境での障害注入による回復性検証（Resiliency Testing）"
@@ -103,7 +103,7 @@
     "type": "単一選択",
     "question": "Well-Architected Frameworkの5つの柱に含まれないものは？",
     "options": [
-      "運用上の優秀性（Operational Excellence）",
+      "統計的なばらつき",
       "信頼性（Reliability）",
       "テスト容易性（Testability）",
       "コスト最適化（Cost Optimization）"

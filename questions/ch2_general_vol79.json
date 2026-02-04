@@ -9,7 +9,7 @@
     "question": "ISO 25010 品質モデルにおいて、「他のシステムと同じ環境で共存できる能力」を示す副特性はどれか。",
     "options": [
       "共存性（Co-existence）",
-      "相互運用性（Interoperability）",
+      "統計的なばらつき",
       "適応性（Adaptability）",
       "置換性（Replaceability）"
     ],
