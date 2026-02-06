@@ -58,8 +58,8 @@
     "type": "単一選択",
     "question": "テストプロセス改善モデルのうち、「段階的（Staged）表現」を用いているモデルはどれか。",
     "options": [
-      "TMMi（Test Maturity Model integration）",
-      "CTP（Critical Testing Processes）",
+      "TMMi",
+      "CTP",
       "TPI Next",
       "STEP"
     ],

@@ -8,10 +8,10 @@
     "type": "単一選択",
     "question": "テストプロセス改善モデル「STEP（Systematic Test and Evaluation Process）」の特徴的な分類はどれか。",
     "options": [
-      "プロセス参照モデル（Process Reference Model）",
-      "コンテンツ参照モデル（Content Reference Model）",
-      "成熟度モデル（Maturity Model）",
-      "監査モデル（Audit Model）"
+      "プロセス参照モデル",
+      "コンテンツ参照モデル",
+      "成熟度モデル",
+      "監査モデル"
     ],
     "answer": [
       "コンテンツ参照モデル（Content Reference Model）"

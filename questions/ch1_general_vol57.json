@@ -58,7 +58,7 @@
     "type": "単一選択",
     "question": "リスクベースドテストの技法には「重量級（Formal）」と「軽量級（Lightweight）」がある。「重量級」の技法に分類されるものはどれか。",
     "options": [
-      "Prisma（Product RISk MAnagement）やFMEA（故障モード影響解析）",
+      "Prisma（Product RISk MAnagement）やFMEA",
       "探索的テスト",
       "チェックリスト",
       "チームでのブレインストーミング"
