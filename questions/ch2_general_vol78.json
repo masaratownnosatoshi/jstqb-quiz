@@ -83,10 +83,10 @@
     "type": "単一選択",
     "question": "【適用】欠陥ステータスの遷移。\n「修正済み（Fixed）」の欠陥に対して確認テストを行ったが、再現手順通りに操作しても現象が発生しなかった（直っていた）。\n次に遷移させるべきステータスは？",
     "options": [
-      "Closed（完了）",
-      "Reopened（差し戻し）",
-      "Deferred（延期）",
-      "New（新規）"
+      "Closed",
+      "Reopened",
+      "Deferred",
+      "New"
     ],
     "answer": [
       "Closed（完了）"

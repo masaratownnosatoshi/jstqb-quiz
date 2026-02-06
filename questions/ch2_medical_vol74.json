@@ -8,10 +8,10 @@
     "type": "単一選択",
     "question": "【適用】医療機器のユーザビリティ評価。\n医師から「操作手順が複雑で覚えにくい」という苦情が来た。\nISO 25010の品質特性において、重点的に検証・改善すべき副特性はどれか。",
     "options": [
-      "習得性（Learnability）",
-      "アクセシビリティ（Accessibility）",
-      "ユーザーエラー防止（User error protection）",
-      "美学（User interface aesthetics）"
+      "習得性",
+      "アクセシビリティ",
+      "ユーザーエラー防止",
+      "美学"
     ],
     "answer": [
       "習得性（Learnability）"
