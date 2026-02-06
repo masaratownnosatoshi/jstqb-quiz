@@ -33,7 +33,7 @@
       "60ポイント"
     ],
     "answer": [
-      "20ポイント（直近3回の平均値を採用する - Weather Yesterday）"
+      "20ポイント"
     ],
     "explanation": "一般的に直近の平均値（Yesterday's Weather）を使用するのが最も確実な予測方法です。"
   }

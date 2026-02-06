@@ -64,7 +64,7 @@
       "STEP"
     ],
     "answer": [
-      "TMMi（Test Maturity Model integration）"
+      "TMMi"
     ],
     "explanation": "【解説】\n・TMMi：段階的（レベル1〜5）。CMMIと同様。\n・CTP、TPI Next、STEP：連続的（Continuous）な改善アプローチに適しています。",
     "tags": [

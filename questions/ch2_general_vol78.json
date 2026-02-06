@@ -89,7 +89,7 @@
       "New"
     ],
     "answer": [
-      "Closed（完了）"
+      "Closed"
     ],
     "explanation": "【解説】\n修正が確認できればクローズします。逆に再現してしまった（直っていない）場合はReopenです。",
     "tags": [
