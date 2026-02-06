@@ -1,0 +1,27 @@
+[
+  {
+    "id": "Q1-AWS-V140-01",
+    "chapter": "第1章",
+    "level": "K3",
+    "category": "AWS",
+    "style": "シナリオ",
+    "type": "単一選択",
+    "question": "【適用】カオスエンジニアリング（AWS FIS）。\n本番環境におけるシステムの耐障害性を検証するために、意図的に障害（EC2の停止や遅延発生など）を注入する実験を行いたい。\nAWSが提供するフルマネージドのカオスエンジニアリングサービスはどれか。",
+    "options": [
+      "AWS Fault Injection Service",
+      "AWS Chaos Monkey Manager",
+      "Amazon Inspector Agent",
+      "AWS X-Ray"
+    ],
+    "answer": [
+      "AWS Fault Injection Service"
+    ],
+    "explanation": "【解説】\nAWS FISは、AWS上でカオスエンジニアリング（障害注入実験）を安全かつ管理された状態で実施するためのフルマネージドサービスです。本番相当の環境で「壊れても復旧できるか」を検証します。",
+    "tags": [
+      "第1章",
+      "AWS",
+      "シナリオ",
+      "K3"
+    ]
+  }
+]
