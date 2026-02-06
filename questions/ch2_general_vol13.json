@@ -8,10 +8,10 @@
     "type": "単一選択",
     "question": "ISO 25010における「信頼性（Reliability）」の副特性に含まれるものはどれか。（他と混同しやすいもの）",
     "options": [
-      "回復性（Recoverability）",
-      "解析性（Analysability）",
-      "機密性（Confidentiality）",
-      "学習性（Learnability）"
+      "回復性",
+      "解析性",
+      "機密性",
+      "学習性"
     ],
     "answer": [
       "回復性（Recoverability）"
@@ -48,7 +48,7 @@
     "options": [
       "初期化されていない変数の使用",
       "メモリリークの可能性",
-      "到達不能コード（Dead Code）",
+      "到達不能コード",
       "応答時間が要件（3秒以内）を満たしていないこと"
     ],
     "answer": [
