@@ -64,7 +64,7 @@
       "チームでのブレインストーミング"
     ],
     "answer": [
-      "Prisma（Product RISk MAnagement）やFMEA（故障モード影響解析）"
+      "Prisma（Product RISk MAnagement）やFMEA"
     ],
     "explanation": "【解説】\nFMEAやFTA、Prismaなどは、厳格な手順と文書化を伴う「重量級」の技法です。アジャイル等では軽量なアプローチが好まれる傾向があります。",
     "tags": [
