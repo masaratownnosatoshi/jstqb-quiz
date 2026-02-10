@@ -3214,20 +3214,6 @@
       "qCount": 1
     },
     {
-      "path": "questions/ch3_ai_vol101.json",
-      "chapter": "第3章",
-      "category": "AI/ML",
-      "klevel": "K4",
-      "qCount": 1
-    },
-    {
-      "path": "questions/ch3_ai_vol111.json",
-      "chapter": "第3章",
-      "category": "AI/ML",
-      "klevel": "K4",
-      "qCount": 1
-    },
-    {
       "path": "questions/ch3_aws.json",
       "chapter": "第3章",
       "category": "AWS",
