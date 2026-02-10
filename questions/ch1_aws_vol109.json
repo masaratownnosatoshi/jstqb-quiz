@@ -1,0 +1,27 @@
+[
+  {
+    "id": "Q1-AWS-V109-01",
+    "chapter": "第1章",
+    "level": "K3",
+    "category": "AWS",
+    "style": "シナリオ",
+    "type": "単一選択",
+    "question": "【適用】CloudFrontとS3によるセキュアな配信。\nS3バケット内の静的コンテンツをCloudFront経由でのみアクセス可能にし、S3への直接アクセスは禁止したい。\nこの要件を満たしているか確認するためのテスト方法はどれか。",
+    "options": [
+      "S3バケットを「パブリックアクセス許可」に設定した上で、ファイル名を推測困難なランダムな文字列（GUID等）にして、誰も直接アクセスできないようにする",
+      "OAC (Origin Access Control) または OAI を設定し、S3バケットポリシーで「CloudFrontからのアクセスのみ許可（Principal判定）」する設定を行った上で、S3のURLに直接アクセスして「403 Forbidden」になることを確認する",
+      "CloudFrontのURLにアクセスして画像が表示されることだけを確認し、S3側の設定確認は省略する",
+      "S3のバケットポリシーですべてのアクセスを拒否（Deny All）し、CloudFrontからもアクセスできない状態にして、安全性を最大限に高める"
+    ],
+    "answer": [
+      "OAC (Origin Access Control) または OAI を設定し、S3バケットポリシーで「CloudFrontからのアクセスのみ許可（Principal判定）」する設定を行った上で、S3のURLに直接アクセスして「403 Forbidden」になることを確認する"
+    ],
+    "explanation": "【解説】\nCloudFront経由のみに制限するには、OAC/OAIとバケットポリシーの組み合わせが必須です。テストでは「S3直接アクセスが拒否されること」を確認します。",
+    "tags": [
+      "第1章",
+      "AWS",
+      "シナリオ",
+      "K3"
+    ]
+  }
+]

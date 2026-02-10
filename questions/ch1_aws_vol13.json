@@ -1,0 +1,40 @@
+[
+  {
+    "id": "Q1-AWS-V13-01",
+    "chapter": "第1章",
+    "level": "K2",
+    "category": "AWS",
+    "style": "用語",
+    "type": "単一選択",
+    "question": "AWSにおける「CloudTrail」と「CloudWatch」の使い分けとして正しいものは？",
+    "options": [
+      "CloudTrailはリソースの構成変更履歴（AWS Config）を記録し、CloudWatchは課金情報を管理する",
+      "CloudTrailはAPI操作ログ（誰がいつ何をしたか）の記録、CloudWatchはメトリクス（CPU使用率等）の監視とログ収集",
+      "CloudTrailはVPC内の通信パケット（Flow Logs）をキャプチャし、CloudWatchは侵入検知を行う",
+      "CloudTrailはアプリケーションのログ専用、CloudWatchはインフラのログ専用である"
+    ],
+    "answer": [
+      "CloudTrailはAPI操作ログ（誰がいつ何をしたか）の記録、CloudWatchはメトリクス（CPU使用率等）の監視とログ収集"
+    ],
+    "explanation": "【ひっかけ】名前が似ていますが役割が逆です。\n・Trail（足跡）＝監査ログ\n・Watch（時計/監視）＝モニタリング"
+  },
+  {
+    "id": "Q1-AWS-V13-02",
+    "chapter": "第1章",
+    "level": "K3",
+    "category": "AWS",
+    "style": "シナリオ",
+    "type": "単一選択",
+    "question": "【背景】AWS S3のデータ整合性テスト。PutObject（書き込み）直後にGetObject（読み込み）を行うテストが稀に失敗する。\n【分析】原因として考慮すべきAWSの特性は？",
+    "options": [
+      "S3の故障",
+      "S3の強力な整合性モデル（Strong Consistency）への移行に伴う一時的ラグ",
+      "書き込み直後の読み込みに対する「結果整合性（Eventual Consistency）」の影響",
+      "ネットワークの切断"
+    ],
+    "answer": [
+      "S3の強力な整合性モデル（Strong Consistency）への移行に伴う一時的ラグ"
+    ],
+    "explanation": "【ひっかけ】かつてS3は「結果整合性」でしたが、現在は「強い整合性」をサポートしています。しかし、問題の意図としては「分散システムの遅延特性」を疑う視点が問われます。（※選択肢として、他の結果整合性サービス＝DynamoDBの一部の読み込み等と混同させることが多いです）"
+  }
+]

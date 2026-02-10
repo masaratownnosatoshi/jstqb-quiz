@@ -1,0 +1,27 @@
+[
+  {
+    "id": "Q2-AWS-V74-01",
+    "chapter": "第2章",
+    "level": "K3",
+    "category": "AWS",
+    "style": "シナリオ",
+    "type": "単一選択",
+    "question": "【適用】AWSコスト管理ツール。\n「開発環境のEC2が週末に稼働しっぱなしで無駄なコストがかかっている」という問題を解決するために導入すべきソリューションは？",
+    "options": [
+      "AWS Cost Explorerでレポートを見るだけ",
+      "AWS Instance Scheduler（またはEventBridge + Lambda）を導入し、金曜夜に自動停止・月曜朝に自動起動する仕組みを実装する",
+      "運用担当者が手動で停止・起動する手順書を作成し、毎週実行させる",
+      "リザーブドインスタンスを購入する"
+    ],
+    "answer": [
+      "AWS Instance Scheduler（またはEventBridge + Lambda）を導入し、金曜夜に自動停止・月曜朝に自動起動する仕組みを実装する"
+    ],
+    "explanation": "【解説】\nレポートを見るだけやメール注意では強制力がありません。自動化（Scheduler）が最も確実な解決策です。",
+    "tags": [
+      "第2章",
+      "AWS",
+      "シナリオ",
+      "K3"
+    ]
+  }
+]

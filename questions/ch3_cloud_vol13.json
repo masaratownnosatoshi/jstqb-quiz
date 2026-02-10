@@ -1,0 +1,21 @@
+[
+  {
+    "id": "Q3-CLD-V13-01",
+    "chapter": "第3章",
+    "level": "K2",
+    "category": "クラウド",
+    "style": "用語",
+    "type": "単一選択",
+    "question": "DevOpsチームにおける「QA」の役割は？",
+    "options": [
+      "Quality Assurance",
+      "Quality Assistant / Coach",
+      "Quality Analyst",
+      "Quality Police"
+    ],
+    "answer": [
+      "Quality Assistant / Coach"
+    ],
+    "explanation": "【ひっかけ】DevOpsではQAの意味が「保証（最後の砦）」から「支援（チーム全体の能力向上）」へとパラダイムシフトしています。"
+  }
+]
