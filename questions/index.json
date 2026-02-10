@@ -4215,6 +4215,62 @@
       "qCount": 1
     },
     {
+      "path": "questions/ch3_management_extra_high.json",
+      "chapter": "第3章",
+      "category": "チームマネジメント",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_management_extra_high_2.json",
+      "chapter": "第3章",
+      "category": "分散チーム",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_management_extra_high_3.json",
+      "chapter": "第3章",
+      "category": "リーダーシップ",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_management_extra_high_4.json",
+      "chapter": "第3章",
+      "category": "スキル評価",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_management_extra_high_5.json",
+      "chapter": "第3章",
+      "category": "コンフリクト",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_management_extra_high_6.json",
+      "chapter": "第3章",
+      "category": "チーム文化",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_management_extra_high_7.json",
+      "chapter": "第3章",
+      "category": "モチベーション",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_management_extra_high_8.json",
+      "chapter": "第3章",
+      "category": "モチベーション",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
       "path": "questions/ch3_medical.json",
       "chapter": "第3章",
       "category": "医療",
