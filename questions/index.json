@@ -4320,6 +4320,13 @@
       "qCount": 5
     },
     {
+      "path": "questions/ch3_management_part6.json",
+      "chapter": "第3章",
+      "category": "人事評価",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/ch3_management_part7.json",
       "chapter": "第3章",
       "category": "ステークホルダー管理",
@@ -4336,7 +4343,7 @@
     {
       "path": "questions/ch3_medical_vol20.json",
       "chapter": "第3章",
-      "category": "医療",
+      "category": "チームマネジメント",
       "klevel": "K4",
       "qCount": 1
     },
