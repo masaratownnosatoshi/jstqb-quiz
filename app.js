@@ -277,7 +277,7 @@ async function fetchJSON(inputUrl) {
 
 async function loadManifest() {
   // ★ルートの index.json を読む
-  const result = await fetchJSON('./index.json');
+  const result = await fetchJSON('questions/index.json');
   if (!result.ok) {
     console.error("index.json not found.");
     return null;
