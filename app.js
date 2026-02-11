@@ -260,7 +260,8 @@ async function idbPut(store, key, value) {
     req.onsuccess = () => resolve(true);
     req.onerror = () => reject(req.error);
   });
-}// ====== データ取得 ======
+}
+// ====== データ取得 ======
 async function fetchJSON(inputUrl) {
   const finalUrl = resolveRepoUrl(inputUrl);
   try {
@@ -276,7 +277,7 @@ async function fetchJSON(inputUrl) {
 
 async function loadManifest() {
   // ★ルートの index.json を読む
-  const result = await fetchJSON('index.json');
+  const result = await fetchJSON('./index.json');
   if (!result.ok) {
     console.error("index.json not found.");
     return null;
