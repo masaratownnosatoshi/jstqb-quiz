@@ -1,6 +1,13 @@
 {
   "chunks": [
     {
+      "path": "questions/ch1_2_extra_hard.json",
+      "chapter": "第1章",
+      "category": "プロセス改善",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
       "path": "questions/ch1_aws.json",
       "chapter": "第1章",
       "category": "AWS",
@@ -1618,6 +1625,13 @@
       "qCount": 1
     },
     {
+      "path": "questions/ch_calculation_extra.json",
+      "chapter": "第1章",
+      "category": "見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/ch2_aws.json",
       "chapter": "第2章",
       "category": "AWS",
@@ -3214,6 +3228,20 @@
       "qCount": 1
     },
     {
+      "path": "questions/ch_calculation_evm.json",
+      "chapter": "第2章",
+      "category": "モニタリング",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch_calculation_metrics.json",
+      "chapter": "第2章",
+      "category": "モニタリング",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/ch3_aws.json",
       "chapter": "第3章",
       "category": "AWS",
@@ -4257,6 +4285,27 @@
       "qCount": 5
     },
     {
+      "path": "questions/ch3_management_hard.json",
+      "chapter": "第3章",
+      "category": "チームマネジメント",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_management_part2.json",
+      "chapter": "第3章",
+      "category": "スキル評価",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/ch3_management_part3.json",
+      "chapter": "第3章",
+      "category": "モチベーション",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/ch3_medical.json",
       "chapter": "第3章",
       "category": "医療",
@@ -4304,27 +4353,6 @@
       "category": "医療",
       "klevel": "K4",
       "qCount": 1
-    },
-    {
-      "path": "questions/ch_calculation_evm.json",
-      "chapter": "第2章",
-      "category": "モニタリング",
-      "klevel": "K3",
-      "qCount": 5
-    },
-    {
-      "path": "questions/ch_calculation_extra.json",
-      "chapter": "第1章",
-      "category": "見積もり",
-      "klevel": "K3",
-      "qCount": 5
-    },
-    {
-      "path": "questions/ch_calculation_metrics.json",
-      "chapter": "第2章",
-      "category": "モニタリング",
-      "klevel": "K3",
-      "qCount": 5
     }
   ]
 }
