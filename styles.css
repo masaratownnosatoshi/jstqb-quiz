@@ -206,7 +206,26 @@ button.fav-btn.active {
 #explanation {
     white-space: pre-wrap;
 }
+/* 以前間違えた問題の警告バッジ */
+.retry-alert {
+    background: #fef3c7; /* 黄色い背景 */
+    color: #92400e; /* 茶色い文字 */
+    padding: 8px 16px;
+    border-radius: 6px;
+    border-left: 4px solid #f59e0b; /* 左に太いオレンジ線 */
+    margin-bottom: 15px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
+/* アイコンを追加 */
+.retry-alert::before {
+    content: '⚠️';
+    font-size: 1.2rem;
+}
 /* 履歴・ダッシュボード */
 details {
     margin: 20px 0;
