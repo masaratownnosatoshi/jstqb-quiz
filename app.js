@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
     onClick('#submitBtn', submitAnswer);
     onClick('#restartBtn', restart);
     onClick('#goHomeBtn', goHome);
+	// ★ここに追加：結果画面の「TOPへ戻る」ボタン
+    onClick('#backToTopBtn', goHome);
     onClick('#clearDataBtn', clearLocalData);
     onClick('#favBtn', toggleFavorite);
 
