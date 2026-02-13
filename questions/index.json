@@ -1,6 +1,27 @@
 {
   "chunks": [
     {
+      "path": "questions/calc_part2.json",
+      "chapter": "第1章",
+      "category": "リスク管理",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part4.json",
+      "chapter": "第1章",
+      "category": "テスト見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part5.json",
+      "chapter": "第1章",
+      "category": "モニタリング",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/ch1_2_extra_hard.json",
       "chapter": "第1章",
       "category": "プロセス改善",
@@ -1628,6 +1649,20 @@
       "path": "questions/ch_calculation_extra.json",
       "chapter": "第1章",
       "category": "見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/questionsch1_activities_part1.json",
+      "chapter": "第1章",
+      "category": "テスト戦略",
+      "klevel": "K4",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part3.json",
+      "chapter": "第2章",
+      "category": "信頼性",
       "klevel": "K3",
       "qCount": 5
     },
@@ -3348,13 +3383,6 @@
     },
     {
       "path": "questions/ch3_cloud_vol3.json",
-      "chapter": "第3章",
-      "category": "クラウド",
-      "klevel": "K3",
-      "qCount": 1
-    },
-    {
-      "path": "questions/ch3_cloud_vol41.json",
       "chapter": "第3章",
       "category": "クラウド",
       "klevel": "K3",
