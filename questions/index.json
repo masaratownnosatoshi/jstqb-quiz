@@ -1,6 +1,13 @@
 {
   "chunks": [
     {
+      "path": "questions/calc_misc.json",
+      "chapter": "第1章",
+      "category": "見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/calc_part10.json",
       "chapter": "第1章",
       "category": "モニタリング",
@@ -8,9 +15,37 @@
       "qCount": 5
     },
     {
+      "path": "questions/calc_part13.json",
+      "chapter": "第1章",
+      "category": "見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/calc_part2.json",
       "chapter": "第1章",
       "category": "リスク管理",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part21.json",
+      "chapter": "第1章",
+      "category": "品質コスト",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part23.json",
+      "chapter": "第1章",
+      "category": "アジャイル",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part29.json",
+      "chapter": "第1章",
+      "category": "見積もり",
       "klevel": "K3",
       "qCount": 5
     },
@@ -25,6 +60,13 @@
       "path": "questions/calc_part5.json",
       "chapter": "第1章",
       "category": "モニタリング",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part6.json",
+      "chapter": "第1章",
+      "category": "見積もり",
       "klevel": "K3",
       "qCount": 5
     },
@@ -1681,6 +1723,13 @@
       "qCount": 5
     },
     {
+      "path": "questions/calc_part12.json",
+      "chapter": "第2章",
+      "category": "欠陥管理",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/calc_part14.json",
       "chapter": "第2章",
       "category": "信頼性",
@@ -1702,7 +1751,84 @@
       "qCount": 5
     },
     {
+      "path": "questions/calc_part17.json",
+      "chapter": "第2章",
+      "category": "信頼性",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part18.json",
+      "chapter": "第2章",
+      "category": "プロセス管理",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part19.json",
+      "chapter": "第2章",
+      "category": "信頼性",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part20.json",
+      "chapter": "第2章",
+      "category": "信頼性",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part22.json",
+      "chapter": "第2章",
+      "category": "欠陥管理",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part24.json",
+      "chapter": "第2章",
+      "category": "信頼性",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part25.json",
+      "chapter": "第2章",
+      "category": "信頼性",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part26.json",
+      "chapter": "第2章",
+      "category": "信頼性",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part27.json",
+      "chapter": "第2章",
+      "category": "信頼性",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part28.json",
+      "chapter": "第2章",
+      "category": "信頼性",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/calc_part3.json",
+      "chapter": "第2章",
+      "category": "信頼性",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part30.json",
       "chapter": "第2章",
       "category": "信頼性",
       "klevel": "K3",
@@ -1712,6 +1838,13 @@
       "path": "questions/calc_part7.json",
       "chapter": "第2章",
       "category": "欠陥管理",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part8.json",
+      "chapter": "第2章",
+      "category": "プロセス管理",
       "klevel": "K3",
       "qCount": 5
     },
