@@ -50,6 +50,41 @@
       "qCount": 5
     },
     {
+      "path": "questions/calc_part31.json",
+      "chapter": "第1章",
+      "category": "見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part32.json",
+      "chapter": "第1章",
+      "category": "見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part33.json",
+      "chapter": "第1章",
+      "category": "見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part34.json",
+      "chapter": "第1章",
+      "category": "見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
+      "path": "questions/calc_part35.json",
+      "chapter": "第1章",
+      "category": "見積もり",
+      "klevel": "K3",
+      "qCount": 5
+    },
+    {
       "path": "questions/calc_part4.json",
       "chapter": "第1章",
       "category": "テスト見積もり",
